@@ -2,10 +2,10 @@ type Tabs =
   | 'about'
   | 'home'
   | 'projects'
-  | 'products'
+  | 'labs'
   | 'resume'
   | 'blog'
-  | 'contact'
+  | 'consulting'
   | 'now'
   | 'work'
 

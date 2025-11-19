@@ -15,6 +15,7 @@ import {
 
 const DARK_GREY = '#999'
 const PRIMARY = '#4f86f7'
+const TERTIARY = '#cc736a'
 
 type CustomizeThemeContextProps = {
   setMuiDrawerStyleOverrides: Dispatch<SetStateAction<CSSInterpolation>>
@@ -44,6 +45,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
           secondary: {
             main: '#fff',
           },
+          tertiary: {
+            main: TERTIARY,
+            contrastText: '#fff',
+          },
         },
         breakpoints: {
           values: {
@@ -67,24 +72,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
               },
             },
           },
-          MuiAppBar: {
-            styleOverrides: {
-              root: {
-                '& .MuiButtonBase-root': {
-                  textTransform: 'lowercase',
-                },
-              },
-            },
-          },
           MuiButton: {
             styleOverrides: {
               root: {
-                textTransform: 'capitalize',
+                textTransform: 'none',
               },
             },
           },
           MuiTypography: {
             styleOverrides: {
+              h4: {
+                fontSize: 24,
+                fontWeight: 400,
+                margin: 0,
+              },
               body2: {
                 fontSize: 20,
                 h3: {

@@ -8,7 +8,7 @@ import React from 'react'
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname()
 
-  const hideLayoutPaths = ['/products/landing-page/design', '/']
+  const hideLayoutPaths = ['/products/landing-page/design']
 
   return (
     <Box
@@ -16,6 +16,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         bgcolor: 'background.default',
         color: 'text.primary',
         minHeight: '100vh',
+        '& footer a': {
+          color: 'white',
+        },
       }}
       display="flex"
       flexDirection="column"

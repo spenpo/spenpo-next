@@ -8,6 +8,8 @@ const getPost = async () =>
 export default async function About() {
   const post = await getPost().then((res) => res?.[0])
 
+  const padding = { sm: 5, xs: 2 }
+
   return (
     <Stack p={{ sm: 5, xs: 2 }} gap={5} mx="auto" maxWidth="50em">
       <Typography
@@ -19,7 +21,7 @@ export default async function About() {
       >
         About
         <Typography display="flex" gap={5}>
-          {post?.date && new Date(post.date).toLocaleDateString()}
+          {post?.modified && new Date(post.modified).toLocaleDateString()}
         </Typography>
       </Typography>
       {post ? (
@@ -27,6 +29,22 @@ export default async function About() {
           variant="body2"
           component="div"
           dangerouslySetInnerHTML={{ __html: post.content.rendered }}
+          sx={{
+            'figure.wp-block-image': {
+              margin: 0,
+              img: {
+                maxWidth: '100%',
+                height: 'auto',
+              },
+            },
+            'pre.wp-block-code': {
+              borderRadius: 1,
+              maxWidth: {
+                xs: `calc(100vw - ${padding.xs * 8 * 2}px)`,
+                sm: `calc(100vw - ${padding.sm * 8 * 2}px)`,
+              },
+            },
+          }}
         />
       ) : (
         <Typography variant="body2">

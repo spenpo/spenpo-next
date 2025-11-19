@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material'
 import { ReactNode } from 'react'
 import { Tabs } from './components/Tabs'
-import { WP_REST_URI } from '../constants/blog'
+import { WP_REST_URI, WP_ROOT } from '../constants/blog'
 
 const Header: React.FC<{ children: ReactNode }> = ({ children }) => (
   <Typography variant="h5" textAlign="center" border="solid .5px" height={34}>
@@ -35,7 +35,7 @@ export default async function Projects() {
     .slice(projectsBlockStart, projectsBlockEnd + 1)
     .join('')
 
-  const dirtyProject = projectsBlock.split('introspective20s.com/projects/')
+  const dirtyProject = projectsBlock.split(`${WP_ROOT}/projects/`)
 
   dirtyProject.shift()
 

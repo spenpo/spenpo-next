@@ -1,0 +1,2 @@
+kind: Added
+body: Added a `decodeHtmlEntities` utility function to the string utils, providing a robust way to handle HTML entity decoding.

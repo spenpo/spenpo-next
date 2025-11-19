@@ -2,24 +2,50 @@ import { Box, Stack, Typography } from '@mui/material'
 import { TagList } from '@/app/blog/components/TagList'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { MetadataProps, PageProps } from '@/app/types/app'
+import { PageProps } from '@/app/types/app'
 import { Metadata } from 'next'
-import { WP_REST_URI, previewImages } from '@/app/constants/blog'
+import { WP_REST_URI, WP_ROOT, previewImages } from '@/app/constants/blog'
 
-const getPost = async (id: string) =>
-  fetch(`${WP_REST_URI}/posts/${id}`).then((res) => res.json())
+const getPostBySlug = async (slug: string) => {
+  const response = await fetch(`${WP_REST_URI}/posts?slug=${slug}`)
+  const posts = await response.json()
+  // WordPress REST API returns an array when querying by slug
+  return Array.isArray(posts) && posts.length > 0 ? posts[0] : null
+}
+
+const getPostById = async (id: string) => {
+  const response = await fetch(`${WP_REST_URI}/posts/${id}`)
+  const post = await response.json()
+  // WordPress REST API returns an object when querying by ID
+  return post && !post.code ? post : null
+}
+
+const isNumeric = (str: string): boolean => {
+  return /^\d+$/.test(str)
+}
 
 export async function generateMetadata({
   params,
-}: MetadataProps): Promise<Metadata> {
-  const post = await getPost(params.id)
+}: {
+  params: { slug: string }
+}): Promise<Metadata> {
+  // If param is numeric (ID), redirect to slug-based URL
+  if (isNumeric(params.slug)) {
+    const post = await getPostById(params.slug)
+    if (post && post.slug) {
+      redirect(`/blog/${post.slug}`)
+    }
+    return {}
+  }
+
+  const post = await getPostBySlug(params.slug)
   if (!post || !post.title || post.code === 'rest_post_invalid_id') {
     return {}
   }
 
   const title = post.title.rendered
   const description = post.excerpt.rendered.slice(3).slice(0, 200)
-  const images = [previewImages[params.id] || '/images/headshot.jpeg']
+  const images = [previewImages[post.id] || '/images/headshot.jpeg']
 
   return {
     title,
@@ -44,7 +70,16 @@ export async function generateMetadata({
 }
 
 export default async function Post({ params }: PageProps) {
-  const post = await getPost(params.id)
+  // If param is numeric (ID), fetch by ID and redirect to slug-based URL
+  if (isNumeric(params.slug)) {
+    const post = await getPostById(params.slug)
+    if (post && post.slug) {
+      redirect(`/blog/${post.slug}`)
+    }
+    redirect('/blog')
+  }
+
+  const post = await getPostBySlug(params.slug)
   if (!post || !post.title || post.code === 'rest_post_invalid_id') {
     redirect('/blog')
   }
@@ -88,11 +123,7 @@ export default async function Post({ params }: PageProps) {
       />
       <Typography variant="body2">
         Please visit{' '}
-        <Link
-          href={`https://introspective20s.com/?p=${params.id}`}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <Link href={`${WP_ROOT}/${post.slug}`} target="_blank" rel="noreferrer">
           my Wordpress site
         </Link>{' '}
         to leave a comment on this post.

@@ -1,0 +1,2 @@
+kind: Changed
+body: Updated the application's navigation structure by replacing 'products' with 'labs' and 'contact' with 'consulting' in the `Tabs` type definition.

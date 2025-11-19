@@ -35,6 +35,9 @@ importers:
       '@mui/material':
         specifier: ^5.15.7
         version: 5.15.7(@emotion/react@11.11.3(@types/react@18.2.53)(react@18.2.0))(@emotion/styled@11.11.0(@emotion/react@11.11.3(@types/react@18.2.53)(react@18.2.0))(@types/react@18.2.53)(react@18.2.0))(@types/react@18.2.53)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@prisma/client':
         specifier: ^5.20.0
         version: 5.20.0(prisma@5.20.0)
@@ -95,6 +98,9 @@ importers:
       react-player:
         specifier: ^2.14.1
         version: 2.14.1(react@18.2.0)
+      react-social-icons:
+        specifier: ^6.25.0
+        version: 6.25.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-timeago:
         specifier: ^7.2.0
         version: 7.2.0(react@18.2.0)
@@ -823,6 +829,10 @@ packages:
     resolution: {integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/template@7.22.15':
     resolution: {integrity: sha512-QPErUVm4uyJa60rkI73qneDacvdvzxshT3kksGqlGWYdOTIUOwJ7RDUL8sGqslY1uXWSL6xMFKEXDS3ox2uF0w==}
     engines: {node: '>=6.9.0'}
@@ -1287,8 +1297,8 @@ packages:
     resolution: {integrity: sha512-m7X9U6BG2+J+R1lSOdCiITLLrxm+cWlNI3HUFA92oLO77ObGNzaKdh8pMLqdZcshtkKuV84olNNXDfMc4FezBQ==}
     engines: {node: '>=10'}
 
-  '@phosphor-icons/react@2.0.15':
-    resolution: {integrity: sha512-PQKNcRrfERlC8gJGNz0su0i9xVmeubXSNxucPcbCLDd9u0cwJVTEyYK87muul/svf0UXFdL2Vl6bbeOhT1Mwow==}
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>= 16.8'
@@ -3198,11 +3208,11 @@ packages:
     peerDependencies:
       react: '>=16.6.0'
 
-  react-social-icons@6.10.0:
-    resolution: {integrity: sha512-b4sbTE7vZBYF2yIa/ObMb6ZfMexnMF+OnciLv1ujzaioiBabZjSMeYS9Pp4Kh6BAeYejF/QByctns4abqy37rA==}
+  react-social-icons@6.25.0:
+    resolution: {integrity: sha512-PN9UpIb+f2u9H2t6MOoybaCD88yvQH+f9z/BILlg+n9MRzSYPtDODPzLb5dCUeyQ42eYyGDPGPIVARLWz5UEjg==}
     peerDependencies:
-      react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
-      react-dom: 15.x.x || 16.x.x || 17.x.x || 18.x.x
+      react: 16.x.x || 17.x.x || 18.x.x || 19.x.x
+      react-dom: 16.x.x || 17.x.x || 18.x.x || 19.x.x
 
   react-timeago@7.2.0:
     resolution: {integrity: sha512-2KsBEEs+qRhKx/kekUVNSTIpop3Jwd7SRBm0R4Eiq3mPeswRGSsftY9FpKsE/lXLdURyQFiHeHFrIUxLYskG5g==}
@@ -4473,6 +4483,8 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
+  '@babel/runtime@7.28.4': {}
+
   '@babel/template@7.22.15':
     dependencies:
       '@babel/code-frame': 7.23.5
@@ -5008,7 +5020,7 @@ snapshots:
 
   '@phc/format@1.0.0': {}
 
-  '@phosphor-icons/react@2.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@phosphor-icons/react@2.1.10(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -5944,7 +5956,7 @@ snapshots:
       debug: 4.3.4
       enhanced-resolve: 5.15.0
       eslint: 8.56.0
-      eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.56.0))(eslint@8.56.0)
+      eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.56.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.56.0)(typescript@5.3.3))(eslint@8.56.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.2
@@ -5956,7 +5968,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.8.0(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.56.0))(eslint@8.56.0):
+  eslint-module-utils@2.8.0(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.56.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -5964,16 +5976,6 @@ snapshots:
       eslint: 8.56.0
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.56.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  eslint-module-utils@2.8.0(@typescript-eslint/parser@6.21.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint@8.56.0):
-    dependencies:
-      debug: 3.2.7
-    optionalDependencies:
-      '@typescript-eslint/parser': 6.21.0(eslint@8.56.0)(typescript@5.3.3)
-      eslint: 8.56.0
-      eslint-import-resolver-node: 0.3.9
     transitivePeerDependencies:
       - supports-color
 
@@ -5987,7 +5989,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.56.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.21.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint@8.56.0)
+      eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.19.0(eslint@8.56.0)(typescript@5.3.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.56.0)
       hasown: 2.0.0
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -7023,9 +7025,9 @@ snapshots:
       react: 18.2.0
       react-fast-compare: 3.2.2
 
-  react-social-icons@6.10.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  react-social-icons@6.25.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.28.4
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
@@ -7227,11 +7229,11 @@ snapshots:
       '@emotion/react': 11.11.3(@types/react@18.2.53)(react@18.2.0)
       '@emotion/styled': 11.11.0(@emotion/react@11.11.3(@types/react@18.2.53)(react@18.2.0))(@types/react@18.2.53)(react@18.2.0)
       '@mui/material': 5.15.7(@emotion/react@11.11.3(@types/react@18.2.53)(react@18.2.0))(@emotion/styled@11.11.0(@emotion/react@11.11.3(@types/react@18.2.53)(react@18.2.0))(@types/react@18.2.53)(react@18.2.0))(@types/react@18.2.53)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@phosphor-icons/react': 2.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@phosphor-icons/react': 2.1.10(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react: 18.2.0
       react-color: 2.19.3(react@18.2.0)
       react-dropzone: 14.2.3(react@18.2.0)
-      react-social-icons: 6.10.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-social-icons: 6.25.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - react-dom

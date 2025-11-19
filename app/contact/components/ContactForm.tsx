@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react'
 import { Button, Grid, Stack, TextField, Typography } from '@mui/material'
 import validator from 'validator'
 import emailjs from '@emailjs/browser'
+import styles from '../../consulting/consulting.module.css'
 
 export const ContactForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -46,13 +47,13 @@ export const ContactForm: React.FC = () => {
   const sendSuccessOrFailure = (): string => {
     if (success) return 'success'
     if (failure) return 'failure'
-    return 'send'
+    return 'Start a conversation'
   }
 
   return (
-    <form ref={formRef}>
-      <Typography variant="body2" mb={5}>
-        Send me an email ♡
+    <form ref={formRef} className={styles.cmsContent}>
+      <Typography component="h2" mb={5}>
+        Get in touch
       </Typography>
       <Grid container spacing={{ md: 5, xs: 2 }} alignSelf="center">
         <Grid item display="flex" md={6} flex={1}>
@@ -61,7 +62,7 @@ export const ContactForm: React.FC = () => {
             multiline
             rows={5}
             name="message"
-            label="What can I do for you?"
+            label="Tell me about your project"
             disabled={success || failure}
             onChange={(e) => setText(!!e.target.value)}
           />
@@ -75,7 +76,7 @@ export const ContactForm: React.FC = () => {
                   fullWidth
                   type="text"
                   name="user_name"
-                  label="name"
+                  label="Name"
                   size="small"
                   disabled={success || failure}
                   onChange={(e) => setName(!!e.target.value)}
@@ -89,7 +90,7 @@ export const ContactForm: React.FC = () => {
                 <TextField
                   fullWidth
                   type="email"
-                  label="email"
+                  label="Email"
                   name="user_email"
                   size="small"
                   disabled={success || failure}

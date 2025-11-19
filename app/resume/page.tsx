@@ -33,7 +33,7 @@ export default async function ResumePage() {
       </Typography>
       <Stack borderTop="solid 2px #999" pt={3} gap={3}>
         <Typography variant="h6" textAlign="center">
-          Spencer Pope - Web Developer & Software Engineer
+          Spencer Pope - Technical Consultant
         </Typography>
         <Resume resumeData={resumeData} />
       </Stack>

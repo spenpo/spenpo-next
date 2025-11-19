@@ -24,4 +24,23 @@ const b64toBlob = (b64Data: string, contentType = '', sliceSize = 512) => {
   return blob
 }
 
-export { formatDomain, b64toBlob }
+const decodeHtmlEntities = (text: string): string => {
+  // Common HTML entity mappings
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&nbsp;': ' ',
+  }
+
+  return text
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+    .replace(/&#x([\da-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&[#\w]+;/g, (entity) => {
+      return entities[entity] || entity
+    })
+}
+
+export { formatDomain, b64toBlob, decodeHtmlEntities }

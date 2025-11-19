@@ -1,0 +1,2 @@
+kind: Added
+body: Extended the MUI theme to include a `tertiary` color palette option, allowing for more flexible and consistent theming across the application.

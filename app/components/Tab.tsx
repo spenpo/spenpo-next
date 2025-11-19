@@ -28,7 +28,12 @@ export const Tab: React.FC<TabProps> = (tab) => {
 
   return (
     <Button
-      sx={{ px: 2, display: { xs: 'none', sm: 'flex' } }}
+      sx={{
+        px: 2,
+        display: { xs: 'none', sm: 'flex' },
+        borderRadius: 50,
+        textTransform: 'capitalize',
+      }}
       variant={isActive ? 'contained' : 'text'}
       color={isActive ? 'primary' : 'secondary'}
       onClick={(e) => {
@@ -36,7 +41,11 @@ export const Tab: React.FC<TabProps> = (tab) => {
           handleClickToOpenMenu(e)
           setMenuChildren(
             menuItems?.map((item) => (
-              <MenuItem key={item} onClick={() => router.push(`/${item}`)}>
+              <MenuItem
+                sx={{ textTransform: 'capitalize' }}
+                key={item}
+                onClick={() => router.push(`/${item}`)}
+              >
                 {item}
               </MenuItem>
             ))

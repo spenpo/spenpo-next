@@ -4,6 +4,7 @@ import { TagList } from './TagList'
 
 export type Post = {
   id: number
+  slug: string
   title: {
     rendered: string
   }
@@ -15,7 +16,7 @@ export type Post = {
 }
 
 export const PostList: React.FC<{ posts: Post[] }> = ({ posts }) =>
-  posts.map(({ id, title, excerpt, tags, date }: Post) => (
+  posts.map(({ id, slug, title, excerpt, tags, date }: Post) => (
     <Stack
       key={id}
       sx={{
@@ -27,7 +28,7 @@ export const PostList: React.FC<{ posts: Post[] }> = ({ posts }) =>
     >
       <Box display="flex" justifyContent="space-between" alignItems="end">
         <Link
-          href={`/blog/${id}`}
+          href={`/blog/${slug}`}
           sx={{
             textDecoration: 'none',
             color: 'text.primary',
