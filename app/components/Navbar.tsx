@@ -46,7 +46,7 @@ export const Navbar: React.FC = () => {
         width: (theme) => `calc(100% - ${theme.spacing(3)})`,
         border: '1px solid rgba(255, 255, 255, 0.15)',
         boxShadow:
-          '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          '0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           boxShadow:
@@ -102,7 +102,7 @@ export const Navbar: React.FC = () => {
             <Button
               variant="text"
               color="secondary"
-              onClick={() => router.push('/contact')}
+              onClick={() => router.push('/consulting')}
               startIcon={<CursorClickIcon />}
               sx={{
                 borderRadius: 50,
@@ -119,7 +119,7 @@ export const Navbar: React.FC = () => {
               Get in touch
             </Button>
             <IconButton
-              onClick={() => router.push('/contact')}
+              onClick={() => router.push('/consulting')}
               sx={{
                 borderRadius: 50,
                 display: { xs: 'flex', md: 'none' },

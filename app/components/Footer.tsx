@@ -21,23 +21,34 @@ export const Footer: React.FC = () => {
       component="footer"
       bgcolor="#555"
       mt="auto"
-      p={6}
-      m={1.5}
+      p={{ xs: 3, sm: 6 }}
+      m={{ xs: 1, sm: 1.5 }}
       borderRadius={2}
       gap={3}
       color="white"
     >
       <Stack
         direction="row"
-        width={{ xs: '100%', sm: '50em' }}
-        justifyContent="space-between"
+        flexWrap="wrap"
+        width={{ xs: '100%', md: '50em' }}
+        justifyContent={{ xs: 'center', md: 'space-between' }}
         mx="auto"
         flex={1}
+        gap={{ xs: 5, md: 0 }}
       >
-        <Stack gap={1}>
+        <Stack
+          gap={1}
+          sx={{
+            textAlign: { xs: 'center', md: 'left' },
+            alignItems: { xs: 'center', md: 'flex-start' },
+          }}
+        >
           <Typography
             fontWeight={600}
             variant="h4"
+            sx={{
+              fontSize: { xs: '1.25rem', sm: '2.125rem' },
+            }}
             color={(theme) => theme.palette.primary.main}
           >
             Work with me
@@ -64,10 +75,17 @@ export const Footer: React.FC = () => {
             </Typography>
           </FooterBullet>
         </Stack>
-        <Stack gap={1}>
+        <Stack
+          gap={1}
+          sx={{
+            textAlign: { xs: 'center', md: 'left' },
+            alignItems: { xs: 'center', md: 'flex-start' },
+          }}
+        >
           <Typography
             fontWeight={600}
             variant="h4"
+            sx={{ fontSize: { xs: '1.25rem', sm: '2.125rem' } }}
             color={(theme) => theme.palette.primary.main}
           >
             My work
@@ -92,10 +110,17 @@ export const Footer: React.FC = () => {
             </Typography>
           </FooterBullet>
         </Stack>
-        <Stack gap={1}>
+        <Stack
+          gap={1}
+          sx={{
+            textAlign: { xs: 'center', md: 'left' },
+            alignItems: { xs: 'center', md: 'flex-start' },
+          }}
+        >
           <Typography
             fontWeight={600}
             variant="h4"
+            sx={{ fontSize: { xs: '1.25rem', sm: '2.125rem' } }}
             color={(theme) => theme.palette.primary.main}
           >
             Resources
@@ -118,27 +143,42 @@ export const Footer: React.FC = () => {
         </Stack>
       </Stack>
       <Stack
-        direction="row"
-        width={{ xs: '100%', sm: '50em' }}
-        justifyContent="space-between"
+        direction={{ xs: 'column', md: 'row' }}
+        width={{ xs: 'unset', md: '50em' }}
+        justifyContent={{ xs: 'center', md: 'space-between' }}
         mx="auto"
         flex={1}
-        alignItems="baseline"
+        alignItems={{ xs: 'center', md: 'baseline' }}
+        gap={{ xs: 1, sm: 0 }}
       >
-        <Stack direction="row" gap={1} alignItems="center">
+        <Stack
+          direction="row"
+          gap={1}
+          alignItems="center"
+          flexWrap="wrap"
+          justifyContent="center"
+        >
           Follow
           {SOCIALS.map(({ href, icon }) => (
             <SocialIcon bgColor="#555" key={href} url={href} defaultSVG={icon} />
           ))}
         </Stack>
-        <Typography display={{ xs: 'none', sm: 'block' }} component="span">
-          v{Package.version}
-        </Typography>
+        <Typography component="span">v{Package.version}</Typography>
       </Stack>
-      <Divider sx={{ borderColor: 'white', width: '50%', mx: 'auto' }} />
-      <Typography display="flex" justifyContent="center" gap={1} textAlign="center">
-        Built on autonomy
-        <FooterBullet>Backed by experience</FooterBullet>
+      <Divider
+        sx={{ borderColor: 'white', width: { xs: '100%', sm: '50%' }, mx: 'auto' }}
+      />
+      <Typography
+        display="flex"
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="center"
+        gap={1}
+        textAlign="center"
+        alignItems="center"
+      >
+        <span>Built on autonomy</span>
+        <FooterBullet></FooterBullet>
+        <span>Backed by experience</span>
       </Typography>
       <Typography display="flex" justifyContent="center" gap={1} textAlign="center">
         © 2025 Spencer Pope

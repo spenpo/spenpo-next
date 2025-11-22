@@ -16,7 +16,31 @@ export default async function Home() {
     ? `https://${process.env.VERCEL_URL}`
     : process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
 
-  const html = post.content.rendered.replaceAll(WP_ROOT, siteUrl)
+  // Only replace WordPress URLs in anchor tags (href attributes), leaving images and other content untouched
+  const html = WP_ROOT
+    ? (() => {
+        const wpRoot = WP_ROOT // Store in const for type narrowing
+        return post.content.rendered.replace(
+          /<a\s+([^>]*)>/gi,
+          (match: string, attrs: string) => {
+            // Check if href attribute exists and contains WP_ROOT
+            const hrefMatch = attrs.match(/href=(["'])([^"']*)\1/i)
+            if (hrefMatch && hrefMatch[2].includes(wpRoot)) {
+              const quote = hrefMatch[1] // Preserve original quote style
+              const oldHref = hrefMatch[2]
+              const newHref = oldHref.replaceAll(wpRoot, siteUrl)
+              // Replace the href value in the attributes string, preserving quote style
+              const newAttrs = attrs.replace(
+                /href=["'][^"']*["']/i,
+                `href=${quote}${newHref}${quote}`
+              )
+              return `<a ${newAttrs}>`
+            }
+            return match
+          }
+        )
+      })()
+    : post.content.rendered
 
   return (
     <Stack>
