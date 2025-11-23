@@ -1,4 +1,4 @@
-import { Stack, Typography, Divider } from '@mui/material'
+import { Stack, Typography, Divider, Box } from '@mui/material'
 import Package from '../../package.json'
 import React from 'react'
 import { SocialIcon } from 'react-social-icons'
@@ -10,7 +10,18 @@ const FooterBullet = ({ children }: { children?: React.ReactNode }) => {
       <Typography fontWeight={600} color={(theme) => theme.palette.primary.main}>
         {`< / > `}
       </Typography>
-      {children}
+      <Box
+        sx={{
+          '& a': {
+            textDecoration: 'none',
+          },
+          ':hover': {
+            textDecoration: 'underline',
+          },
+        }}
+      >
+        {children}
+      </Box>
     </Stack>
   )
 }
@@ -19,7 +30,9 @@ export const Footer: React.FC = () => {
   return (
     <Stack
       component="footer"
-      bgcolor="#555"
+      sx={{
+        background: (theme) => theme.palette.gradient.headerFooter,
+      }}
       mt="auto"
       p={{ xs: 3, sm: 6 }}
       m={{ xs: 1, sm: 1.5 }}
@@ -59,7 +72,7 @@ export const Footer: React.FC = () => {
             </Typography>
           </FooterBullet>
           <FooterBullet>
-            <Typography variant="body2" component="a" href="/products/landing-page">
+            <Typography variant="body2" component="a" href="/labs/landing-page">
               Start a website
             </Typography>
           </FooterBullet>
@@ -160,7 +173,12 @@ export const Footer: React.FC = () => {
         >
           Follow
           {SOCIALS.map(({ href, icon }) => (
-            <SocialIcon bgColor="#555" key={href} url={href} defaultSVG={icon} />
+            <SocialIcon
+              bgColor="transparent"
+              key={href}
+              url={href}
+              defaultSVG={icon}
+            />
           ))}
         </Stack>
         <Typography component="span">v{Package.version}</Typography>

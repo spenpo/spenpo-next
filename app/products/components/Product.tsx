@@ -51,14 +51,14 @@ export const Product: React.FC<{
           </Button> */}
             {buyNow && (
               <Button
-                onClick={() => router.push(`/products/${id}/${learnMore ?? ''}`)}
+                onClick={() => router.push(`/labs/${id}/${learnMore ?? ''}`)}
                 variant="text"
               >
                 learn more
               </Button>
             )}
             <Button
-              onClick={() => router.push(`/products/${id}/${buyNow ?? ''}`)}
+              onClick={() => router.push(`/labs/${id}/${buyNow ?? ''}`)}
               variant="contained"
             >
               buy now

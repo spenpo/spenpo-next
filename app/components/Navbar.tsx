@@ -39,7 +39,7 @@ export const Navbar: React.FC = () => {
       position="static"
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #6b6b6b 0%, #4a4a4a 50%, #3a3a3a 100%)',
+        background: (theme) => theme.palette.gradient.headerFooter,
         borderRadius: 50,
         mx: 1.5,
         mt: 1.5,
@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
                 display={{ xs: 'none', md: 'block' }}
                 noWrap
               >
-                Spenpo.com
+                Spencer Pope
               </Typography>
             </Button>
           </Box>

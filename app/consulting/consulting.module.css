@@ -128,12 +128,20 @@
 }
 
 /* Two-column feature layouts (info + image) */
+.cmsContent :global(.wp-block-columns.wp-container-core-columns-is-layout-3) {
+  display: flex;
+  gap: 1rem;
+  margin: 3.5rem 0;
+  align-items: center;
+  flex-direction: column-reverse;
+}
+
+/* Two-column feature layouts (info + image) */
 .cmsContent :global(.wp-block-columns.wp-container-core-columns-is-layout-2),
-.cmsContent :global(.wp-block-columns.wp-container-core-columns-is-layout-3),
 .cmsContent :global(.wp-block-columns.wp-container-core-columns-is-layout-4) {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1rem;
   margin: 3.5rem 0;
   align-items: center;
 }
@@ -148,7 +156,7 @@
 .cmsContent
   :global(.wp-block-columns.wp-container-core-columns-is-layout-4)
   :global(.wp-block-column) {
-  min-width: 0;
+  min-width: 100%;
 }
 
 /* Image column styling (contain images nicely) */
@@ -237,6 +245,7 @@
   .cmsContent :global(.wp-block-columns.wp-container-core-columns-is-layout-3) {
     grid-template-columns: 1fr 2fr;
     gap: 2.5rem 3rem;
+    display: grid;
   }
 }
 
@@ -313,6 +322,7 @@
 
 .cmsContent :global(.spenpo-container) {
   /* padding: { xs: 16px, sm: 40px } to mirror MUI spacing (2, 5) */
+  padding: 0;
   backdrop-filter: blur(2px);
   position: relative;
 }

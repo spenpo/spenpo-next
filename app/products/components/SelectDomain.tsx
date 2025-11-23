@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Domain } from './Domain'
 import { LoadMoreBtn } from './LoadMoreBtn'
 import { DomainField } from './DomainField'
+import { RateLimitProvider } from './RateLimitContext'
 import { LIMIT_INCREMENT, TLDS } from '../constants'
 import { PageProps } from '@/app/types/app'
 import { getServerSession } from 'next-auth'
@@ -45,33 +46,35 @@ export async function SelectDomain({
   }
 
   return (
-    <Stack maxWidth="70em" width="-webkit-fill-available" mx="auto" gap={5}>
-      <Stack justifyContent="center" gap={3} alignItems="center">
-        <DomainField defaultRenew={defaultRenew} />
+    <RateLimitProvider>
+      <Stack maxWidth="70em" width="-webkit-fill-available" mx="auto" gap={5}>
+        <Stack justifyContent="center" gap={3} alignItems="center">
+          <DomainField defaultRenew={defaultRenew} />
+        </Stack>
+        <Grid container spacing={1} width="100%">
+          {q &&
+            q.length > 2 &&
+            domainNames.map((domainName) => (
+              <Grid item xs={12} sm={6} md={3} key={domainName}>
+                <Suspense
+                  fallback={
+                    <Box
+                      borderRadius={1}
+                      textAlign="center"
+                      p={1}
+                      sx={{ color: 'lightgray' }}
+                    >
+                      <Typography>{domainName}</Typography>
+                    </Box>
+                  }
+                >
+                  <Domain domainName={domainName} />
+                </Suspense>
+              </Grid>
+            ))}
+        </Grid>
+        {q && <LoadMoreBtn disabled={limit > domainNames.length} />}
       </Stack>
-      <Grid container spacing={1} width="100%">
-        {q &&
-          q.length > 2 &&
-          domainNames.map((domainName) => (
-            <Grid item xs={12} sm={6} md={3} key={domainName}>
-              <Suspense
-                fallback={
-                  <Box
-                    borderRadius={1}
-                    textAlign="center"
-                    p={1}
-                    sx={{ color: 'lightgray' }}
-                  >
-                    <Typography>{domainName}</Typography>
-                  </Box>
-                }
-              >
-                <Domain domainName={domainName} />
-              </Suspense>
-            </Grid>
-          ))}
-      </Grid>
-      {q && <LoadMoreBtn disabled={limit > domainNames.length} />}
-    </Stack>
+    </RateLimitProvider>
   )
 }

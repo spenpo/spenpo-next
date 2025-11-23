@@ -26,7 +26,13 @@ export const PostList: React.FC<{ posts: Post[] }> = ({ posts }) =>
       }}
       gap={1}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="end">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="end"
+        flexDirection={{ xs: 'column', md: 'row' }}
+        gap={{ xs: 1, md: 0 }}
+      >
         <Link
           href={`/blog/${slug}`}
           sx={{
@@ -36,6 +42,7 @@ export const PostList: React.FC<{ posts: Post[] }> = ({ posts }) =>
               textDecoration: 'underline',
               color: 'primary.main',
             },
+            alignSelf: 'flex-start',
           }}
         >
           <Typography

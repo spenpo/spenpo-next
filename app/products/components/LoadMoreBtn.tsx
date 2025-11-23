@@ -4,8 +4,10 @@ import { Button } from '@mui/material'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import React, { useEffect, useRef } from 'react'
 import { LIMIT_INCREMENT } from '../constants'
+import { useRateLimit } from './RateLimitContext'
 
 export const LoadMoreBtn: React.FC<{ disabled: boolean }> = ({ disabled }) => {
+  const { isRateLimited, retryAfter } = useRateLimit()
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -40,9 +42,14 @@ export const LoadMoreBtn: React.FC<{ disabled: boolean }> = ({ disabled }) => {
         router.push(`${pathname}?${search}`)
       }}
       sx={{ mx: 'auto' }}
-      disabled={disabled}
+      disabled={disabled || isRateLimited}
+      title={
+        isRateLimited && retryAfter
+          ? `Rate limited. Please wait ${retryAfter} seconds.`
+          : undefined
+      }
     >
-      load more
+      {isRateLimited && retryAfter ? `Rate limited (${retryAfter}s)` : 'load more'}
     </Button>
   )
 }

@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material'
 import { AvailableDomain } from './AvailableDomain'
 import { revalidateTag, unstable_cache } from 'next/cache'
 import { ReactNode } from 'react'
+import { DomainError } from './DomainError'
 
 const Unavailable: React.FC<{ children: ReactNode }> = ({ children }) => (
   <Box
@@ -44,15 +45,7 @@ export const Domain = async ({ domainName }: { domainName: string }) => {
   if (status?.available === undefined) {
     revalidateTag(domainName)
     return (
-      <Box
-        sx={{ outline: 'solid red' }}
-        borderRadius={1}
-        textAlign="center"
-        p={1}
-        color="red"
-      >
-        <Typography>{status?.error?.message?.slice(20, 44)}</Typography>
-      </Box>
+      <DomainError domainName={domainName} errorMessage={status?.error?.message} />
     )
   }
 

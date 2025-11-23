@@ -18,8 +18,9 @@ export default async function Consulting() {
       mx="auto"
       flex={1}
       width="100%"
+      gap={0}
     >
-      <Typography component="h1">Let’s build something together</Typography>
+      <Typography component="h1">Let&apos;s build something together</Typography>
       {post ? (
         <Typography
           variant="body2"

@@ -16,6 +16,8 @@ import {
 const DARK_GREY = '#999'
 const PRIMARY = '#4f86f7'
 const TERTIARY = '#cc736a'
+export const HEADER_FOOTER_GRADIENT =
+  'linear-gradient(135deg, #6b6b6b 0%, #4a4a4a 50%, #3a3a3a 100%)'
 
 type CustomizeThemeContextProps = {
   setMuiDrawerStyleOverrides: Dispatch<SetStateAction<CSSInterpolation>>
@@ -48,6 +50,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
           tertiary: {
             main: TERTIARY,
             contrastText: '#fff',
+          },
+          gradient: {
+            headerFooter: HEADER_FOOTER_GRADIENT,
           },
         },
         breakpoints: {

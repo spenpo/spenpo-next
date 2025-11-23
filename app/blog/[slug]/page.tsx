@@ -4,20 +4,41 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PageProps } from '@/app/types/app'
 import { Metadata } from 'next'
-import { WP_REST_URI, WP_ROOT, previewImages } from '@/app/constants/blog'
+import { WP_REST_URI, WP_ROOT } from '@/app/constants/blog'
+
+type WpPost = {
+  _embedded: {
+    'wp:featuredmedia': {
+      source_url: string
+    }[]
+  }
+}
 
 const getPostBySlug = async (slug: string) => {
-  const response = await fetch(`${WP_REST_URI}/posts?slug=${slug}`)
+  const response = await fetch(`${WP_REST_URI}/posts?slug=${slug}&_embed=true`)
   const posts = await response.json()
   // WordPress REST API returns an array when querying by slug
   return Array.isArray(posts) && posts.length > 0 ? posts[0] : null
 }
 
 const getPostById = async (id: string) => {
-  const response = await fetch(`${WP_REST_URI}/posts/${id}`)
+  const response = await fetch(`${WP_REST_URI}/posts/${id}?_embed=true`)
   const post = await response.json()
   // WordPress REST API returns an object when querying by ID
   return post && !post.code ? post : null
+}
+
+// Extract featured image URL from WordPress post
+const getFeaturedImageUrl = (post: WpPost) => {
+  if (
+    post._embedded &&
+    post._embedded['wp:featuredmedia'] &&
+    post._embedded['wp:featuredmedia'][0] &&
+    post._embedded['wp:featuredmedia'][0].source_url
+  ) {
+    return post._embedded['wp:featuredmedia'][0].source_url
+  }
+  return null
 }
 
 const isNumeric = (str: string): boolean => {
@@ -45,7 +66,8 @@ export async function generateMetadata({
 
   const title = post.title.rendered
   const description = post.excerpt.rendered.slice(3).slice(0, 200)
-  const images = [previewImages[post.id] || '/images/headshot.jpeg']
+  const featuredImageUrl = getFeaturedImageUrl(post)
+  const images = [featuredImageUrl || '/images/headshot.jpeg']
 
   return {
     title,
@@ -89,7 +111,13 @@ export default async function Post({ params }: PageProps) {
   return (
     <Stack p={padding} gap={{ sm: 5, xs: 2 }} mx="auto" maxWidth="50em">
       <Stack gap={1}>
-        <Box display="flex" justifyContent="space-between" alignItems="end">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="end"
+          flexDirection={{ xs: 'column', md: 'row' }}
+          gap={{ xs: 1, md: 0 }}
+        >
           <Typography
             component="h1"
             dangerouslySetInnerHTML={{ __html: post.title.rendered }}
@@ -118,6 +146,7 @@ export default async function Post({ params }: PageProps) {
               xs: `calc(100vw - ${padding.xs * 8 * 2}px)`,
               sm: `calc(100vw - ${padding.sm * 8 * 2}px)`,
             },
+            overflow: 'scroll',
           },
         }}
       />
