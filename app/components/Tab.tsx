@@ -42,7 +42,11 @@ export const Tab: React.FC<TabProps> = (tab) => {
           setMenuChildren(
             menuItems?.map((item) => (
               <MenuItem
-                sx={{ textTransform: 'capitalize' }}
+                sx={{
+                  textTransform: 'capitalize',
+                  color: 'text.primary',
+                  bgcolor: 'background.paper',
+                }}
                 key={item}
                 onClick={() => router.push(`/${item}`)}
               >

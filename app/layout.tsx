@@ -76,13 +76,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ margin: 0 }} suppressHydrationWarning>
         <NextAuthProvider>
           <UnAuthContextProvider>
-            <SnackbarContextProvider>
-              <MenuContextProvider>
-                <ThemeProvider>
+            <ThemeProvider>
+              <SnackbarContextProvider>
+                <MenuContextProvider>
                   <Layout>{children}</Layout>
-                </ThemeProvider>
-              </MenuContextProvider>
-            </SnackbarContextProvider>
+                </MenuContextProvider>
+              </SnackbarContextProvider>
+            </ThemeProvider>
           </UnAuthContextProvider>
         </NextAuthProvider>
         <Script

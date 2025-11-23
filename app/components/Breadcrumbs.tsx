@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { styled } from '@mui/material/styles'
 import { useCallback, useState } from 'react'
 
-const StyledLink = styled(Link)(() => ({
-  color: '#555',
+const StyledLink = styled(Link)(({ theme }) => ({
+  color: theme.palette.mode === 'dark' ? theme.palette.text.secondary : '#555',
   padding: '0px !important',
   '&:hover': {
     textDecoration: 'underline',

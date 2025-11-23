@@ -39,6 +39,7 @@ export const Footer: React.FC = () => {
       borderRadius={2}
       gap={3}
       color="white"
+      border="1px solid rgba(255, 255, 255, 0.15)"
     >
       <Stack
         direction="row"

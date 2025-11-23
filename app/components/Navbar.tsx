@@ -11,12 +11,15 @@ import {
   Typography,
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
-import { Suspense, useState } from 'react'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import { Suspense, useState, useContext } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { AvatarMenu } from './AvatarMenu'
 import { type TabProps, Tab } from './Tab'
 import { MobileTab } from './MobileTab'
 import { CursorClickIcon } from '@phosphor-icons/react'
+import { ColorModeContext } from '../context/theme'
 
 const TABS: TabProps[] = [
   { id: 'about' },
@@ -33,6 +36,7 @@ export const Navbar: React.FC = () => {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const { mode, toggleColorMode } = useContext(ColorModeContext)
 
   return (
     <AppBar
@@ -139,8 +143,18 @@ export const Navbar: React.FC = () => {
               <Tab key={tab.id} {...tab} />
             ))}
             <IconButton
+              onClick={toggleColorMode}
+              color="secondary"
               sx={{
-                color: 'white',
+                transition: 'all 0.3s ease-in-out',
+              }}
+              aria-label="toggle dark mode"
+            >
+              {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+            <IconButton
+              sx={{
+                color: 'secondary.main',
                 display: { sm: 'none' },
               }}
               onClick={() => setOpen(true)}
@@ -157,9 +171,11 @@ export const Navbar: React.FC = () => {
             open={open}
             onClose={() => setOpen(false)}
           >
-            {TABS.map((tab) => (
-              <MobileTab key={tab.id} {...tab} />
-            ))}
+            <Stack gap={2} px={2}>
+              {TABS.map((tab) => (
+                <MobileTab key={tab.id} {...tab} />
+              ))}
+            </Stack>
           </Drawer>
         </Toolbar>
       </Container>

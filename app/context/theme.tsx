@@ -5,6 +5,7 @@ import React, {
   createContext,
   Dispatch,
   SetStateAction,
+  useEffect,
 } from 'react'
 import {
   createTheme,
@@ -16,20 +17,54 @@ import {
 const DARK_GREY = '#999'
 const PRIMARY = '#4f86f7'
 const TERTIARY = '#cc736a'
-export const HEADER_FOOTER_GRADIENT =
+export const HEADER_FOOTER_GRADIENT_LIGHT =
   'linear-gradient(135deg, #6b6b6b 0%, #4a4a4a 50%, #3a3a3a 100%)'
+export const HEADER_FOOTER_GRADIENT_DARK =
+  'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)'
+
+type ColorMode = 'light' | 'dark'
 
 type CustomizeThemeContextProps = {
   setMuiDrawerStyleOverrides: Dispatch<SetStateAction<CSSInterpolation>>
 }
 
+type ColorModeContextProps = {
+  mode: ColorMode
+  toggleColorMode: () => void
+}
+
 export const CustomizeThemeContext = createContext({} as CustomizeThemeContextProps)
+export const ColorModeContext = createContext<ColorModeContextProps>({
+  mode: 'light',
+  toggleColorMode: () => {},
+})
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [muiDrawerStyleOverrides, setMuiDrawerStyleOverrides] =
     useState<CSSInterpolation>({})
+
+  // Initialize color mode from localStorage or default to 'light'
+  const [mode, setMode] = useState<ColorMode>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('colorMode') as ColorMode | null
+      return stored || 'light'
+    }
+    return 'light'
+  })
+
+  // Persist color mode to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('colorMode', mode)
+    }
+  }, [mode])
+
+  const toggleColorMode = React.useCallback(() => {
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'))
+  }, [])
+
   const colorMode = useMemo(() => {
     const ctxVal: CustomizeThemeContextProps = {
       setMuiDrawerStyleOverrides,
@@ -37,22 +72,34 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     return ctxVal
   }, [])
 
+  const colorModeContextValue = useMemo(
+    () => ({
+      mode,
+      toggleColorMode,
+    }),
+    [mode, toggleColorMode]
+  )
+
   const theme = useMemo(
     () =>
       createTheme({
         palette: {
+          mode,
           primary: {
             main: PRIMARY,
           },
           secondary: {
-            main: '#fff',
+            main: mode === 'dark' ? '#fff' : '#fff',
           },
           tertiary: {
             main: TERTIARY,
             contrastText: '#fff',
           },
           gradient: {
-            headerFooter: HEADER_FOOTER_GRADIENT,
+            headerFooter:
+              mode === 'dark'
+                ? HEADER_FOOTER_GRADIENT_DARK
+                : HEADER_FOOTER_GRADIENT_LIGHT,
           },
         },
         breakpoints: {
@@ -102,7 +149,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
                   margin: 0,
                 },
                 'h3 a': {
-                  color: 'black',
+                  color: mode === 'dark' ? '#fff' : 'black',
                   opacity: '0.87',
                   textDecoration: 'none',
                 },
@@ -174,15 +221,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         },
       }),
-    [muiDrawerStyleOverrides]
+    [muiDrawerStyleOverrides, mode]
   )
 
   return (
     <CustomizeThemeContext.Provider value={colorMode}>
-      <MuiProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </MuiProvider>
+      <ColorModeContext.Provider value={colorModeContextValue}>
+        <MuiProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </MuiProvider>
+      </ColorModeContext.Provider>
     </CustomizeThemeContext.Provider>
   )
 }

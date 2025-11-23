@@ -20,10 +20,13 @@ export const Product: React.FC<{
       <Stack
         borderRadius={1}
         gap={2}
-        bgcolor="#eee"
-        border="solid 1px #ddd"
+        bgcolor={(theme) =>
+          theme.palette.mode === 'dark' ? theme.palette.background.paper : '#eee'
+        }
+        border={(theme) => `solid 1px ${theme.palette.divider}`}
         p={3}
         flex={1}
+        color="text.primary"
       >
         <BgImage
           src={`/images/${id}.png`}

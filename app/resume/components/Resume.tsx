@@ -63,7 +63,7 @@ export const Resume: React.FC<ResumeProps> = ({ resumeData }: ResumeProps) => {
             )}
             {section.content.type === 'nested' &&
               section.content.nestedSections?.map((nestedSection, i) => (
-                <Accordion key={i} expanded={i === 0}>
+                <Accordion key={i} defaultExpanded={i === 0}>
                   <LinkSummary {...nestedSection} />
                   <AccordionDetails>
                     <List>

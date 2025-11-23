@@ -28,6 +28,9 @@ const Menu: React.FC<Omit<MenuProps, 'open'> & { onClose: () => void }> = ({
           sx: {
             overflow: 'visible',
             filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            border: (theme) => `solid 1px ${theme.palette.divider}`,
             mt: 1.5,
             '&:before': {
               content: '""',
@@ -40,6 +43,9 @@ const Menu: React.FC<Omit<MenuProps, 'open'> & { onClose: () => void }> = ({
               bgcolor: 'background.paper',
               transform: 'translateY(-50%) rotate(45deg)',
               zIndex: 0,
+              border: (theme) => `solid 1px ${theme.palette.divider}`,
+              borderRight: 'none',
+              borderBottom: 'none',
             },
           },
         },
