@@ -458,7 +458,7 @@
   position: relative;
   min-height: 100vh;
   display: grid;
-  place-items: center;
+  place-items: flex-start;
   padding-left: 16px;
   padding-right: 16px;
   padding-top: 80px;
@@ -470,6 +470,7 @@
   .cmsContent :global(.spenpo-container.hero) {
     padding-left: 32px;
     padding-right: 32px;
+    place-items: center;
   }
 }
 
