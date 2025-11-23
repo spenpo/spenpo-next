@@ -143,6 +143,15 @@ export const Navbar: React.FC = () => {
               <Tab key={tab.id} {...tab} />
             ))}
             <IconButton
+              sx={{
+                color: 'secondary.main',
+                display: { sm: 'none' },
+              }}
+              onClick={() => setOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <IconButton
               onClick={toggleColorMode}
               color="secondary"
               sx={{
@@ -151,15 +160,6 @@ export const Navbar: React.FC = () => {
               aria-label="toggle dark mode"
             >
               {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
-            <IconButton
-              sx={{
-                color: 'secondary.main',
-                display: { sm: 'none' },
-              }}
-              onClick={() => setOpen(true)}
-            >
-              <MenuIcon />
             </IconButton>
             <Suspense>
               <AvatarMenu />

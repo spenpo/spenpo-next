@@ -618,11 +618,11 @@
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: radial-gradient(
+  /* background: radial-gradient(
     closest-side,
     rgba(255, 255, 255, 0.25),
     rgba(255, 255, 255, 0)
-  );
+  ); */
   filter: blur(10px);
   pointer-events: none;
   z-index: 1;
