@@ -179,6 +179,8 @@ export const Footer: React.FC = () => {
               key={href}
               url={href}
               defaultSVG={icon}
+              target="_blank"
+              rel="noreferrer"
             />
           ))}
         </Stack>
