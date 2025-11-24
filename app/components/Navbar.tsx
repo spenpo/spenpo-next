@@ -49,12 +49,8 @@ export const Navbar: React.FC = () => {
         mt: 1.5,
         width: (theme) => `calc(100% - ${theme.spacing(3)})`,
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow:
-          '0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
-          boxShadow:
-            '0 6px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
           transform: 'translateY(-1px)',
         },
       }}

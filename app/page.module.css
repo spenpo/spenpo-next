@@ -535,11 +535,13 @@
   line-height: 1.2;
   font-size: 2rem;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  margin-top: 0;
 }
 
 @media (min-width: 600px) {
   .cmsContent :global(.title.hero) {
     font-size: 2.5rem;
+    margin-top: 2.5rem;
   }
 }
 
@@ -577,6 +579,10 @@
 
 .cmsContent :global(.cta.contained.hero) {
   display: inline-block;
+}
+
+.cmsContent :global(.call-to-action.spenpo-container p) {
+  margin: 24px 0;
 }
 
 .cmsContent :global(.cta.contained.hero a) {

@@ -20,7 +20,13 @@ export const MobileTab: React.FC<TabProps> = (tab) => {
   return (
     <>
       <Button
-        sx={{ pl: 3, pr: 5, borderRadius: 0, justifyContent: 'flex-start' }}
+        sx={{
+          pl: 3,
+          pr: 5,
+          borderRadius: 50,
+          textTransform: 'capitalize',
+          justifyContent: 'flex-start',
+        }}
         variant={isActive ? 'contained' : 'text'}
         color={isActive ? 'primary' : 'secondary'}
         onClick={() => {

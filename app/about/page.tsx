@@ -44,6 +44,9 @@ export default async function About() {
                 sm: `calc(100vw - ${padding.sm * 8 * 2}px)`,
               },
             },
+            'hr.wp-block-separator': {
+              margin: '24px',
+            },
           }}
         />
       ) : (
