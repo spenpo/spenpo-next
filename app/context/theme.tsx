@@ -122,6 +122,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
                   fontSize: 30,
                 },
               },
+              a: {
+                color: PRIMARY,
+              },
             },
           },
           MuiButton: {
