@@ -21,7 +21,6 @@ export default async function Blog({ searchParams }: PageProps) {
   // Fetch all categories
   const categoriesRes = await fetch(`${WP_REST_URI}/categories?per_page=100`)
   const categories = await categoriesRes.json()
-  console.log(categories)
   // Filter out uncategorized (usually id 1) and get category IDs
   const categoryIds = categories
     ?.filter(

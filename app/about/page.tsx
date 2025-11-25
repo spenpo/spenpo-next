@@ -47,6 +47,18 @@ export default async function About() {
             'hr.wp-block-separator': {
               margin: '24px',
             },
+            'blockquote.wp-block-quote': {
+              margin: '2rem 0',
+              padding: '1.5rem 1.5rem 1.5rem 2rem',
+              borderLeft: '4px solid rgba(0, 0, 0, 0.2)',
+              color: 'var(--cms-text-color-dark, rgba(0, 0, 0, 0.85))',
+              background: 'var(--cms-blockquote-bg, rgba(255, 255, 255, 0.6))',
+              backdropFilter: 'blur(4px)',
+              borderRadius: '0 0.5rem 0.5rem 0',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              textShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              lineHeight: '1.8',
+            },
           }}
         />
       ) : (
