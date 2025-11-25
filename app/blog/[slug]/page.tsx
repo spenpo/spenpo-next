@@ -148,6 +148,9 @@ export default async function Post({ params }: PageProps) {
             },
             overflow: 'scroll',
           },
+          'hr.wp-block-separator': {
+            margin: '24px',
+          },
         }}
       />
       <Typography variant="body2">
