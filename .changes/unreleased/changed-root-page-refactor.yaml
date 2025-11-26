@@ -1,2 +1,0 @@
-kind: Changed
-body: Refactored the root page to fetch content from a WordPress backend, replacing the `SpenpoLanding` component with a new, more dynamic implementation.

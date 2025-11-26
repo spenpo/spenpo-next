@@ -1,2 +1,0 @@
-kind: Fixed
-body: Updated the projects page to use the `WP_ROOT` constant when splitting the `dirtyProject` variable, making the code more robust and maintainable.

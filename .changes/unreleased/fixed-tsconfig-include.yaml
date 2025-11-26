@@ -1,2 +1,0 @@
-kind: Fixed
-body: Updated the `include` array in `tsconfig.json` to include `**/*.d.ts` files, ensuring that all TypeScript declaration files are correctly processed by the compiler.
