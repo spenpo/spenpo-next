@@ -11,11 +11,6 @@ const getPost = async () =>
 export default async function Home() {
   const post = await getPost().then((res) => res?.[0])
 
-  // Use VERCEL_URL (automatically available on Vercel) or fallback to localhost for dev
-  const siteUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
-
   // Only replace WordPress URLs in anchor tags (href attributes), leaving images and other content untouched
   const html = WP_ROOT
     ? (() => {
@@ -28,7 +23,7 @@ export default async function Home() {
             if (hrefMatch && hrefMatch[2].includes(wpRoot)) {
               const quote = hrefMatch[1] // Preserve original quote style
               const oldHref = hrefMatch[2]
-              const newHref = oldHref.replaceAll(wpRoot, siteUrl)
+              const newHref = oldHref.replaceAll(wpRoot, '/blog')
               // Replace the href value in the attributes string, preserving quote style
               const newAttrs = attrs.replace(
                 /href=["'][^"']*["']/i,
