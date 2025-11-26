@@ -198,7 +198,11 @@
     var(--cms-card-bg-start, rgba(255, 255, 255, 0.7)),
     var(--cms-card-bg-end, rgba(255, 255, 255, 0.55))
   );
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: var(
+    --cms-shadow-md,
+    0 6px 24px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.04)
+  );
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
   backdrop-filter: blur(2px);
 }
@@ -214,7 +218,11 @@
   :global(.wp-block-columns.wp-container-core-columns-is-layout-1)
   :global(.wp-block-column:hover) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: var(
+    --cms-shadow-hover,
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.06)
+  );
   border-color: var(--cms-border-color, rgba(0, 0, 0, 0.12));
 }
 

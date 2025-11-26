@@ -28,6 +28,22 @@ export const ThemeCSSVariables: React.FC = () => {
       root.style.setProperty('--cms-card-bg-end', 'rgba(255, 255, 255, 0.08)') // Card gradient end
       root.style.setProperty('--mui-palette-background-default', '#121212') // Background default
       root.style.setProperty('--cms-blockquote-bg', 'rgba(255, 255, 255, 0.2)') // Blockquote background
+      root.style.setProperty(
+        '--cms-shadow-sm',
+        '0 2px 8px rgba(255, 255, 255, 0.08)'
+      ) // Small shadow
+      root.style.setProperty(
+        '--cms-shadow-md',
+        '0 6px 24px rgba(255, 255, 255, 0.06), 0 2px 6px rgba(255, 255, 255, 0.04)'
+      ) // Medium shadow
+      root.style.setProperty(
+        '--cms-shadow-lg',
+        '0 10px 30px rgba(255, 255, 255, 0.1), 0 4px 10px rgba(255, 255, 255, 0.06)'
+      ) // Large shadow
+      root.style.setProperty(
+        '--cms-shadow-hover',
+        '0 10px 30px rgba(255, 255, 255, 0.1), 0 4px 10px rgba(255, 255, 255, 0.06)'
+      ) // Hover shadow
     } else {
       // Light mode CSS variables
       root.style.setProperty('--cms-link-color', '#333') // Dark gray for links
@@ -44,6 +60,19 @@ export const ThemeCSSVariables: React.FC = () => {
       root.style.setProperty('--cms-card-bg-end', 'rgba(255, 255, 255, 0.55)') // Card gradient end
       root.style.setProperty('--mui-palette-background-default', '#ffffff') // Background default
       root.style.setProperty('--cms-blockquote-bg', 'rgba(255, 255, 255, 0.6)') // Blockquote background
+      root.style.setProperty('--cms-shadow-sm', '0 2px 8px rgba(0, 0, 0, 0.08)') // Small shadow
+      root.style.setProperty(
+        '--cms-shadow-md',
+        '0 6px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04)'
+      ) // Medium shadow
+      root.style.setProperty(
+        '--cms-shadow-lg',
+        '0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06)'
+      ) // Large shadow
+      root.style.setProperty(
+        '--cms-shadow-hover',
+        '0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06)'
+      ) // Hover shadow
     }
   }, [mode])
 

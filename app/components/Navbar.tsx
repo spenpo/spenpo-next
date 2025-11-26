@@ -25,11 +25,10 @@ const TABS: TabProps[] = [
   { id: 'about' },
   {
     id: 'work',
-    menuItems: ['labs', 'projects', 'resume'],
+    menuItems: ['projects', 'resume', 'blog', 'labs'],
   },
-  { id: 'now' },
-  { id: 'blog' },
   { id: 'consulting' },
+  { id: 'now' },
 ]
 
 export const Navbar: React.FC = () => {
@@ -50,9 +49,18 @@ export const Navbar: React.FC = () => {
         width: (theme) => `calc(100% - ${theme.spacing(3)})`,
         border: '1px solid rgba(255, 255, 255, 0.15)',
         transition: 'all 0.3s ease-in-out',
+        boxShadow: (theme) =>
+          theme.palette.mode === 'dark'
+            ? '0 4px 20px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(255, 255, 255, 0.04)'
+            : '0 4px 20px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
         '&:hover': {
           transform: 'translateY(-1px)',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? '0 8px 32px rgba(255, 255, 255, 0.12), 0 4px 16px rgba(255, 255, 255, 0.06)'
+              : '0 8px 32px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.12)',
         },
+        zIndex: 1000,
       }}
     >
       <Container
