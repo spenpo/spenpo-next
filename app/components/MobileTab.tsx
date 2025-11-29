@@ -42,7 +42,13 @@ export const MobileTab: React.FC<TabProps> = (tab) => {
         menuItems?.map((item) => (
           <Button
             color="secondary"
-            sx={{ pl: 5, pr: 3, borderRadius: 0, justifyContent: 'flex-start' }}
+            sx={{
+              pl: 5,
+              pr: 3,
+              borderRadius: 0,
+              justifyContent: 'flex-start',
+              textTransform: 'capitalize',
+            }}
             key={item}
             onClick={() => router.push(`/${item}`)}
           >
