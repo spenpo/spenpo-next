@@ -1,6 +1,6 @@
 {
   "name": "spenpo-next",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -50,7 +50,7 @@
     "react-timeago": "^7.2.0",
     "react-timeclock": "^0.2.0",
     "react-timer-hook": "^3.0.7",
-    "spenpo-landing": "^2.0.26",
+    "spenpo-landing": "^2.0.16",
     "spenpo-svelte": "link:svelte-apps",
     "stripe": "^13.11.0",
     "validator": "^13.11.0"
