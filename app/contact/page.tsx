@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { ContactForm } from './components/ContactForm'
 import { Stack, Typography } from '@mui/material'
 
@@ -13,7 +13,9 @@ export default function Home() {
       width="100%"
     >
       <Typography component="h1">Contact</Typography>
-      <ContactForm />
+      <Suspense fallback={null}>
+        <ContactForm />
+      </Suspense>
     </Stack>
   )
 }
