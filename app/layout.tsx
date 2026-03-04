@@ -14,19 +14,19 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = 'Developer & Entrepreneur'
 
   return {
-    metadataBase: new URL(`https://${process.env.VERCEL_URL}`),
+    metadataBase: new URL(`https://spenpo.com`),
     title,
     description,
     openGraph: {
       title,
       description,
-      url: process.env.VERCEL_URL,
+      url: `https://spenpo.com`,
       siteName: 'spenpo.com',
       locale: 'en_US',
       type: 'website',
     },
     robots: {
-      index: false,
+      index: true,
       follow: true,
       nocache: true,
       googleBot: {

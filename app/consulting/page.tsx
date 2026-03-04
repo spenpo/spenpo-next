@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { ContactForm } from '../contact/components/ContactForm'
 import { Stack, Typography } from '@mui/material'
 import { WP_ROOT, WP_REST_URI } from '../constants/blog'
@@ -58,7 +58,9 @@ export default async function Consulting() {
           Hold up... wait a minute... somethin ain&apos;t right
         </Typography>
       )}
-      <ContactForm />
+      <Suspense fallback={null}>
+        <ContactForm />
+      </Suspense>
     </Stack>
   )
 }
