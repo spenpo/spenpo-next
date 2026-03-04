@@ -4,7 +4,7 @@ import prisma from '@/app/utils/prisma'
 import { Product } from '@/app/products/components/Product'
 
 export default async function Products() {
-  const products = await prisma.product.findMany({ where: { hide: false } }).then((products) => products.sort((a, b) => a.name === "Forged SEO" ? -1 : 1))
+  const products = await prisma.product.findMany({ where: { hide: false } }).then((products) => products.sort((a) => a.name === "Forged SEO" ? -1 : 1))
 
   return (
     <Stack
