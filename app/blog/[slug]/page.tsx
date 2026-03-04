@@ -75,7 +75,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: process.env.VERCEL_URL,
+      url: `https://spenpo.com/blog/${params.slug}`,
       siteName: 'spenpo.com',
       locale: 'en_US',
       type: 'website',

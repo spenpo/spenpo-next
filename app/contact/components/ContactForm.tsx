@@ -1,9 +1,10 @@
 'use client'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button, Grid, Stack, TextField, Typography } from '@mui/material'
 import validator from 'validator'
 import emailjs from '@emailjs/browser'
 import styles from '../../consulting/consulting.module.css'
+import { useSearchParams } from 'next/navigation'
 
 export const ContactForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -14,7 +15,36 @@ export const ContactForm: React.FC = () => {
   const [emailString, setEmailString] = useState('')
   const [emailError, setEmailError] = useState(false)
   const [text, setText] = useState(false)
+  const [textAreaValue, setTextAreaValue] = useState('')
   const formRef = useRef<HTMLFormElement | null>(null)
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Topic can be in the query (?topic=...) or in the hash (#anchor?topic=...)
+    let topic = searchParams.get('topic')
+    if (!topic && typeof window !== 'undefined') {
+      const hashPart = window.location.hash.split('?')[1]
+      topic = hashPart ? new URLSearchParams(hashPart).get('topic') : null
+    }
+    if (topic) {
+      switch (topic) {
+        case 'consulting':
+          setTextAreaValue('I am interested in consulting services')
+          break
+        case 'labs':
+          setTextAreaValue('I am interested in labs services')
+          break
+        case 'forged-seo':
+          setTextAreaValue('I am interested in using Forged SEO...')
+          break
+        default:
+          setTextAreaValue('')
+          break
+      }
+      setText(true)
+    }
+  }, [searchParams])
 
   const sendEmail = (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +81,7 @@ export const ContactForm: React.FC = () => {
   }
 
   return (
-    <form ref={formRef} className={styles.cmsContent}>
+    <form id="contact-form" ref={formRef} className={styles.cmsContent}>
       <Typography component="h2" mb={5}>
         Get in touch
       </Typography>
@@ -64,7 +94,11 @@ export const ContactForm: React.FC = () => {
             name="message"
             label="Tell me about your project"
             disabled={success || failure}
-            onChange={(e) => setText(!!e.target.value)}
+            value={textAreaValue}
+            onChange={(e) => {
+              setTextAreaValue(e.target.value)
+              setText(!!e.target.value)
+            }}
           />
         </Grid>
         <Grid item container md={6}>

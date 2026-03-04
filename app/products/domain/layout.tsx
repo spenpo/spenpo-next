@@ -18,13 +18,13 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: process.env.VERCEL_URL,
+      url: `https://spenpo.com/products/domain`,
       siteName: 'spenpo.com',
       locale: 'en_US',
       type: 'website',
     },
     robots: {
-      index: false,
+      index: true,
       follow: true,
       nocache: true,
       googleBot: {
