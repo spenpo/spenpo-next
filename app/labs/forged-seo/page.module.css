@@ -1,6 +1,18 @@
 /* Compose root page CMS styles (shared + hero/container); add forged-seo-only overrides */
 .cmsContent {
   composes: cmsContent from '../../page.module.css';
+  font-size: 20px;
+}
+
+/* Enforce minimum 20px for body text (MUI body2 is 0.875rem by default) */
+.cmsContent :global(.MuiTypography-body2) {
+  font-size: 1em;
+}
+
+/* Ensure CMS and section text inherit the 20px base */
+.cmsContent :global(p),
+.cmsContent :global(li) {
+  font-size: 1em;
 }
 
 /* Forged SEO: table figure margin (page uses wp-block-table) */
@@ -15,4 +27,54 @@
 
 .cmsContent :global(.wp-block-button__link:hover) {
   background: #ff8a65;
+}
+
+/* Build-in-Public / newsletter section */
+.buildInPublicSection {
+  margin-top: 1.5rem;
+}
+
+.buildInPublicSection :global(.spenpo-stack) {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.benefitList {
+  margin: 0 0 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.benefitList li {
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+}
+
+.qrAndFormRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 0.5rem;
+  justify-content: space-between;
+}
+
+.qrImage {
+  flex-shrink: 0;
+  border-radius: 8px;
+  display: block;
+}
+
+.newsletterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 16rem;
+  max-width: 20rem;
+}
+
+.newsletterForm label {
+  font-size: 1em;
+  font-weight: 500;
+  color: inherit;
 }

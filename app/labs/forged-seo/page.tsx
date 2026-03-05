@@ -1,53 +1,56 @@
-import React from 'react'
-import { Stack, Typography } from '@mui/material'
+import React, { Suspense } from 'react'
+import { Stack, Typography, Button, TextField } from '@mui/material'
+import RssFeedIcon from '@mui/icons-material/RssFeed'
 import { WP_REST_URI, WP_ROOT } from '@/app/constants/blog'
 import backgroundImage from '@/images/background.png'
 import { Metadata } from 'next'
 import prisma from '@/app/utils/prisma'
 import styles from './page.module.css'
+import { ContactForm } from '@/app/contact/components/ContactForm'
+import Image from 'next/image'
 
 export async function generateMetadata(): Promise<Metadata> {
-    const product = await prisma.product.findFirst({
-      where: {
-        id: 'forged-seo',
-      },
-    })
-  
-    const title = product?.name
-    const description = product?.description
-  
-    return {
+  const product = await prisma.product.findFirst({
+    where: {
+      id: 'forged-seo',
+    },
+  })
+
+  const title = product?.name
+  const description = product?.description
+
+  return {
+    title,
+    description,
+    openGraph: {
       title,
       description,
-      openGraph: {
-        title,
-        description,
-        url: `https://spenpo.com/labs/forged-seo`,
-        siteName: 'spenpo.com',
-        locale: 'en_US',
-        type: 'website',
-      },
-      robots: {
+      url: `https://spenpo.com/labs/forged-seo`,
+      siteName: 'spenpo.com',
+      locale: 'en_US',
+      type: 'website',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
         index: true,
-        follow: true,
-        nocache: true,
-        googleBot: {
-          index: true,
-          follow: false,
-          noimageindex: true,
-          'max-video-preview': -1,
-          'max-image-preview': 'large',
-          'max-snippet': -1,
-        },
+        follow: false,
+        noimageindex: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        creator: '@s_pop3',
-      },
-    }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      creator: '@s_pop3',
+    },
   }
+}
 
 const getPost = async () =>
   fetch(`${WP_REST_URI}/pages?slug=forged-seo`).then((res) => res.json())
@@ -105,6 +108,74 @@ export default async function ForgedSEO() {
               gap: 0,
             }}
           />
+          <Stack className={styles.cmsContent}>
+            <div className={`spenpo-container ${styles.buildInPublicSection}`}>
+              <div className="spenpo-stack">
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Build-in-Public: Agent Logs
+                </Typography>
+                <Typography sx={{ mb: 2 }}>
+                  I'm building ForgedSEO in the open. Provide your email or scan the
+                  QR code below to receive:
+                </Typography>
+                <ul className={styles.benefitList}>
+                  <li>
+                    Usage Logs: Real examples of generated clusters and research
+                    artifacts.
+                  </li>
+                  <li>
+                    System Updates: New agent capabilities and pipeline improvements.
+                  </li>
+                  <li>Markdown Strategy: Tips for local-first SEO workflows.</li>
+                </ul>
+                <div className={styles.qrAndFormRow}>
+                  <form
+                    action="https://buttondown.com/api/emails/embed-subscribe/forged-seo"
+                    method="post"
+                    className={styles.newsletterForm}
+                  >
+                    <Typography>Enter your email</Typography>
+                    <TextField sx={{ fontSize: '16px' }} type="email" name="email" id="bd-email" label="Email" size="small" />
+                    <Button className='wp-block-button__link' type="submit" variant="contained" size="large">Subscribe</Button>
+                  </form>
+                  <Image src="/images/buttondown-forged-seo.png" alt="Forged SEO QR code" width={200} height={200} className={styles.qrImage} />
+                </div>
+              </div>
+            </div>
+            <div className="spenpo-container">
+              <div className="spenpo-stack">
+                <Typography variant="h6" component="h2" gutterBottom>Send me a direct line to discuss how ForgedSEO can help your team</Typography>
+                <Suspense fallback={null}>
+                  <ContactForm />
+                </Suspense>
+              </div>
+            </div>
+            <div className="spenpo-container">
+              <div className="spenpo-stack">
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Stay in the loop
+                </Typography>
+                <Typography sx={{ mb: 2 }}>
+                  Not ready to get started yet? Subscribe to the RSS feed and
+                  we&apos;ll keep you posted on new features, tips, and updates for
+                  Forged SEO.
+                </Typography>
+                <Button
+                  component="a"
+                  href="/api/feeds/forged-seo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="contained"
+                  className="wp-block-button__link"
+                  sx={{ display: 'inline-flex !important' }}
+                  size="large"
+                  startIcon={<RssFeedIcon />}
+                >
+                  Subscribe to RSS feed
+                </Button>
+              </div>
+            </div>
+          </Stack>
         </Stack>
       ) : (
         <Typography variant="body2">
