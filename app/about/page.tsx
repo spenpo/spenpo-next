@@ -20,7 +20,7 @@ export default async function About() {
         justifyContent="space-between"
       >
         About
-        <Typography display="flex" gap={5}>
+        <Typography component="span" display="flex" gap={5}>
           {post?.modified && new Date(post.modified).toLocaleDateString()}
         </Typography>
       </Typography>

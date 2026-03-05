@@ -190,6 +190,7 @@ export const Footer: React.FC = () => {
         sx={{ borderColor: 'white', width: { xs: '100%', sm: '50%' }, mx: 'auto' }}
       />
       <Typography
+        component="div"
         display="flex"
         flexDirection={{ xs: 'column', sm: 'row' }}
         justifyContent="center"
@@ -201,7 +202,7 @@ export const Footer: React.FC = () => {
         <FooterBullet></FooterBullet>
         <span>Backed by experience</span>
       </Typography>
-      <Typography display="flex" justifyContent="center" gap={1} textAlign="center">
+      <Typography component="div" display="flex" justifyContent="center" gap={1} textAlign="center">
         © 2025 Spencer Pope
       </Typography>
     </Stack>

@@ -1,3 +1,4 @@
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter'
 import { Layout } from './components/Layout'
 import { NextAuthProvider } from './context/nextAuth'
 import { ThemeProvider } from './context/theme'
@@ -74,17 +75,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body style={{ margin: 0 }} suppressHydrationWarning>
-        <NextAuthProvider>
-          <UnAuthContextProvider>
-            <ThemeProvider>
-              <SnackbarContextProvider>
-                <MenuContextProvider>
-                  <Layout>{children}</Layout>
-                </MenuContextProvider>
-              </SnackbarContextProvider>
-            </ThemeProvider>
-          </UnAuthContextProvider>
-        </NextAuthProvider>
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          <NextAuthProvider>
+            <UnAuthContextProvider>
+              <ThemeProvider>
+                <SnackbarContextProvider>
+                  <MenuContextProvider>
+                    <Layout>{children}</Layout>
+                  </MenuContextProvider>
+                </SnackbarContextProvider>
+              </ThemeProvider>
+            </UnAuthContextProvider>
+          </NextAuthProvider>
+        </AppRouterCacheProvider>
         <Script
           src={`${WP_CHILD_THEME_RESOURCES}/includes/prism.js`}
           // You can use different strategies:

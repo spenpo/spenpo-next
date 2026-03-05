@@ -45,16 +45,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [muiDrawerStyleOverrides, setMuiDrawerStyleOverrides] =
     useState<CSSInterpolation>({})
 
-  // Initialize color mode from localStorage or default to 'light'
-  const [mode, setMode] = useState<ColorMode>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('colorMode') as ColorMode | null
-      return stored || 'light'
-    }
-    return 'light'
-  })
+  // Always start with 'light' so server and first client render match (avoids hydration mismatch).
+  // Sync from localStorage after mount.
+  const [mode, setMode] = useState<ColorMode>('light')
 
-  // Persist color mode to localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('colorMode') as ColorMode | null
+    if (stored === 'dark' || stored === 'light') {
+      setMode(stored)
+    }
+  }, [])
+
+  // Persist color mode to localStorage when it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('colorMode', mode)
