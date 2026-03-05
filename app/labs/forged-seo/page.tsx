@@ -115,7 +115,7 @@ export default async function ForgedSEO() {
                   Build-in-Public: Agent Logs
                 </Typography>
                 <Typography sx={{ mb: 2 }}>
-                  I'm building ForgedSEO in the open. Provide your email or scan the
+                  I&apos;m building ForgedSEO in the open. Provide your email or scan the
                   QR code below to receive:
                 </Typography>
                 <ul className={styles.benefitList}>
