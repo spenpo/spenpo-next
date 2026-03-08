@@ -13,7 +13,6 @@
 .cmsContent h4 {
   margin-top: 2.5rem;
   margin-bottom: 1.25rem;
-  font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
@@ -393,4 +392,27 @@
   max-width: 50em;
   margin-left: auto;
   margin-right: auto;
+}
+
+/**
+ * When WordPress content has an odd number of .spenpo-container sections, the
+ * last one has no solid background (nth-child(odd)); the first follow-on
+ * section (e.g. newsletter) must get the solid background so alternation
+ * continues. Shift the alternation for the rest: 2nd gets no solid, 3rd gets
+ * solid. Set data-wp-sections-odd="true" on the .cmsContent wrapper that
+ * contains the follow-on sections when the WP section count is odd.
+ */
+.cmsContent[data-wp-sections-odd='true'] :global(.spenpo-container:first-child) {
+  background: var(--cms-bg-container-even, rgba(255, 255, 255, 0.92));
+}
+
+/* Prevent 2nd section from getting nth-child(even) solid when we forced 1st to solid.
+   !important needed so this wins over .cmsContent .spenpo-container:nth-child(even) in page.module.css. */
+.cmsContent[data-wp-sections-odd='true'] :global(.spenpo-container:nth-child(2)) {
+  background: transparent !important;
+}
+
+/* 3rd section gets solid so alternation continues (1=solid, 2=transparent, 3=solid) */
+.cmsContent[data-wp-sections-odd='true'] :global(.spenpo-container:nth-child(3)) {
+  background: var(--cms-bg-container-even, rgba(255, 255, 255, 0.92));
 }

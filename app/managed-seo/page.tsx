@@ -4,20 +4,14 @@ import RssFeedIcon from '@mui/icons-material/RssFeed'
 import { WP_REST_URI, WP_ROOT } from '@/app/constants/blog'
 import backgroundImage from '@/images/background.png'
 import { Metadata } from 'next'
-import prisma from '@/app/utils/prisma'
-import styles from './page.module.css'
+import styles from '../labs/forged-seo/page.module.css'
 import { ContactForm } from '@/app/contact/components/ContactForm'
 import { NewsletterSubscribe } from '@/app/components/NewsletterSubscribe'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const product = await prisma.product.findFirst({
-    where: {
-      id: 'forged-seo',
-    },
-  })
-
-  const title = product?.name
-  const description = product?.description
+  const title = 'Managed SEO Strategy. Powered by ForgedSEO.'
+  const description =
+    'Get the Content Depth of an In-House Team at a Fraction of the Cost.'
 
   return {
     title,
@@ -25,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `https://spenpo.com/labs/forged-seo`,
+      url: `https://spenpo.com/managed-seo`,
       siteName: 'spenpo.com',
       locale: 'en_US',
       type: 'website',
@@ -53,9 +47,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const getPost = async () =>
-  fetch(`${WP_REST_URI}/pages?slug=forged-seo`).then((res) => res.json())
+  fetch(`${WP_REST_URI}/pages?slug=managed-seo-strategy`).then((res) => res.json())
 
-export default async function ForgedSEO() {
+export default async function ManagedSEO() {
   const post = await getPost().then((res) => res?.[0])
 
   // Only replace WordPress URLs in anchor tags (href attributes), leaving images and other content untouched
@@ -120,31 +114,37 @@ export default async function ForgedSEO() {
             <div id='newsletter-subscribe' className={`spenpo-container ${styles.buildInPublicSection}`}>
               <div className="spenpo-stack">
                 <Typography variant="h6" component="h2" gutterBottom>
-                  Build-in-Public: Agent Logs
+                  Inside the Engine: Monthly Strategy & Insights
                 </Typography>
                 <Typography sx={{ mb: 2 }}>
-                  I&apos;m building ForgedSEO in the open. Provide your email or scan the
-                  QR code below to receive:
+                  I&apos;m building the future of automated search authority in the
+                  open. Subscribe to get a behind-the-scenes look at how we&apos;re
+                  scaling content for our partner brands.
                 </Typography>
                 <ul className={styles.benefitList}>
                   <li>
-                    Usage Logs: Real examples of generated clusters and research
-                    artifacts.
+                    The Strategy Report: Real-world examples of how our agents
+                    identify high-traffic clusters and pillar opportunities.
                   </li>
                   <li>
-                    System Updates: New agent capabilities and pipeline improvements.
+                    Intelligence Updates: New research capabilities we&apos;re adding to
+                    the engine to keep your brand ahead of the curve.
                   </li>
-                  <li>Markdown Strategy: Tips for local-first SEO workflows.</li>
+                  <li>
+                    Market Insights: Brief, developer-led takes on where SEO is
+                    heading and how we&apos;re adapting the engine to stay dominant.
+                  </li>
                 </ul>
-                <Typography component="blockquote" sx={{ mb: 2 }}>SEO professionals know that one post is a fluke, but <strong>42 posts</strong> is a system. I&apos;ve been running ForgedSEO for a private client for 3 months. We just hit a milestone: <strong>350+ organic clicks in the last 28 days</strong>.<br /> Subscribe to see the Agent Logs behind these 42 posts and learn how we&apos;re maintaining this velocity without burning out.</Typography>
                 <Suspense fallback={null}>
-                  <NewsletterSubscribe archetype="diy" />
+                  <NewsletterSubscribe archetype="dfy" />
                 </Suspense>
               </div>
             </div>
             <div className="spenpo-container">
               <div className="spenpo-stack">
-                <Typography variant="h6" component="h2" gutterBottom>Send me a direct line to discuss how ForgedSEO can help your team</Typography>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Send me a direct line to discuss how ForgedSEO can help your team
+                </Typography>
                 <Suspense fallback={null}>
                   <ContactForm />
                 </Suspense>
