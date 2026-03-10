@@ -110,7 +110,7 @@ export const Navbar: React.FC = () => {
             <Button
               variant="text"
               color="secondary"
-              onClick={() => router.push('/consulting')}
+              onClick={() => router.push('/managed-seo')}
               startIcon={<CursorClickIcon />}
               sx={{
                 borderRadius: 50,
@@ -118,22 +118,22 @@ export const Navbar: React.FC = () => {
                 height: 40,
                 px: 2,
                 '&:hover': {
-                  bgcolor: 'tertiary.main',
+                  bgcolor: '#FF5722',//'tertiary.main',
                   color: 'secondary.main',
                 },
                 transition: 'all 0.3s ease-in-out',
               }}
             >
-              Get in touch
+              <span>Check out <strong>ForgedSEO</strong></span>
             </Button>
             <IconButton
-              onClick={() => router.push('/consulting')}
+              onClick={() => router.push('/managed-seo')}
               sx={{
                 borderRadius: 50,
                 display: { xs: 'flex', md: 'none' },
                 color: 'secondary.main',
                 '&:hover': {
-                  bgcolor: 'tertiary.main',
+                  bgcolor: '#FF5722',//'tertiary.main',
                   color: 'secondary.main',
                 },
                 transition: 'all 0.3s ease-in-out',
