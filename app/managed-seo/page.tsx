@@ -53,30 +53,32 @@ export default async function ManagedSEO() {
   const post = await getPost().then((res) => res?.[0])
 
   // Only replace WordPress URLs in anchor tags (href attributes), leaving images and other content untouched
-  const html = WP_ROOT
-    ? (() => {
-        const wpRoot = WP_ROOT // Store in const for type narrowing
-        return post.content.rendered.replace(
-          /<a\s+([^>]*)>/gi,
-          (match: string, attrs: string) => {
-            // Check if href attribute exists and contains WP_ROOT
-            const hrefMatch = attrs.match(/href=(["'])([^"']*)\1/i)
-            if (hrefMatch && hrefMatch[2].includes(wpRoot)) {
-              const quote = hrefMatch[1] // Preserve original quote style
-              const oldHref = hrefMatch[2]
-              const newHref = oldHref.replaceAll(wpRoot, '/blog')
-              // Replace the href value in the attributes string, preserving quote style
-              const newAttrs = attrs.replace(
-                /href=["'][^"']*["']/i,
-                `href=${quote}${newHref}${quote}`
-              )
-              return `<a ${newAttrs}>`
+  const html = post
+    ? WP_ROOT
+      ? (() => {
+          const wpRoot = WP_ROOT // Store in const for type narrowing
+          return post.content.rendered.replace(
+            /<a\s+([^>]*)>/gi,
+            (match: string, attrs: string) => {
+              // Check if href attribute exists and contains WP_ROOT
+              const hrefMatch = attrs.match(/href=(["'])([^"']*)\1/i)
+              if (hrefMatch && hrefMatch[2].includes(wpRoot)) {
+                const quote = hrefMatch[1] // Preserve original quote style
+                const oldHref = hrefMatch[2]
+                const newHref = oldHref.replaceAll(wpRoot, '/blog')
+                // Replace the href value in the attributes string, preserving quote style
+                const newAttrs = attrs.replace(
+                  /href=["'][^"']*["']/i,
+                  `href=${quote}${newHref}${quote}`
+                )
+                return `<a ${newAttrs}>`
+              }
+              return match
             }
-            return match
-          }
-        )
-      })()
-    : post.content.rendered
+          )
+        })()
+      : post.content.rendered
+    : ''
 
   const wpSectionCount = post
     ? (html.match(/class="[^"]*\bspenpo-container\b[^"]*"/g) || []).length
