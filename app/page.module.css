@@ -170,6 +170,47 @@
   margin: 24px 0;
 }
 
+/* Staging MCP dual-deploy demo banner */
+.cmsContent :global(.mcp-staging-banner.spenpo-container) {
+  background: linear-gradient(
+    135deg,
+    var(--cms-card-bg-start, rgba(25, 118, 210, 0.12)),
+    var(--cms-card-bg-end, rgba(25, 118, 210, 0.04))
+  );
+  border-top: 3px solid var(--cms-button-bg, #1976d2);
+  border-bottom: 1px solid var(--cms-border-color, rgba(0, 0, 0, 0.08));
+  backdrop-filter: blur(4px);
+}
+
+.cmsContent :global(.mcp-staging-banner .spenpo-stack) {
+  max-width: 50em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cmsContent :global(.mcp-staging-banner h2) {
+  margin-top: 0;
+  color: var(--cms-text-color-dark, rgba(0, 0, 0, 0.9));
+  text-shadow: none;
+}
+
+.cmsContent :global(.mcp-staging-banner p) {
+  text-shadow: none;
+  color: var(--cms-text-color-dark, rgba(0, 0, 0, 0.85));
+}
+
+.cmsContent :global(.mcp-staging-banner .wp-block-button__link) {
+  background: var(--cms-button-bg, #1976d2);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-decoration: none;
+}
+
+.cmsContent :global(.mcp-staging-banner .wp-block-button__link:hover) {
+  background: var(--cms-button-bg-hover, #1565c0);
+}
+
 .cmsContent :global(.cta.contained.hero a) {
   padding-left: 24px;
   padding-right: 24px;
