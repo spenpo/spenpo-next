@@ -5,6 +5,7 @@ type Tabs =
   | 'labs'
   | 'resume'
   | 'blog'
+  | 'books'
   | 'consulting'
   | 'now'
   | 'work'
