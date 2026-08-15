@@ -1,14 +1,8 @@
 import prisma from '@/app/utils/prisma'
 import { NextResponse, NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
-import Stripe from 'stripe'
 import { authOptions } from '../../constants/api'
-import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
-
-// This is your test secret API key.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: STRIPE_PRODUCT_API_VERSION,
-})
+import { stripeProduct } from '@/app/utils/stripe'
 
 export async function POST(req: NextRequest) {
   const { metadata, productId } = await req.json()
@@ -32,7 +26,7 @@ export async function POST(req: NextRequest) {
   })
 
   // Create a PaymentIntent with the order amount and currency
-  const paymentIntent = await stripe.paymentIntents.create({
+  const paymentIntent = await stripeProduct.paymentIntents.create({
     amount: product!.price + Number(metadata.price),
     currency: 'usd',
     // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.

@@ -12,3 +12,11 @@ export const stripeBilling = new Stripe(secretKey, {
 
 /** Historical API version used by product checkout PaymentIntents. */
 export const STRIPE_PRODUCT_API_VERSION = '2023-08-16' as Stripe.LatestApiVersion
+
+/**
+ * Product checkout client (landing page / domain). Placeholder key is for
+ * Next.js build-time module evaluation when STRIPE_SECRET_KEY is unset.
+ */
+export const stripeProduct = new Stripe(secretKey, {
+  apiVersion: STRIPE_PRODUCT_API_VERSION,
+})

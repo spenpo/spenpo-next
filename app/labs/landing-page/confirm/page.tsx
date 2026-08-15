@@ -3,10 +3,9 @@ import { Box, Stack, Typography } from '@mui/material'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/app/constants/api'
 import { getServerSession } from 'next-auth'
-import Stripe from 'stripe'
 import Link from 'next/link'
 import { PageProps } from '@/app/types/app'
-import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
+import { stripeProduct } from '@/app/utils/stripe'
 import { ViewYourSitesBtn } from '@/app/products/components/confirm/ViewYourSitesBtn'
 import redis from '@/app/utils/redis'
 import { getProject } from '@/app/services/vercel'
@@ -27,17 +26,13 @@ export default async function Confirm({ searchParams }: PageProps) {
 
   let domains: string[] = []
   if (session) {
-    // This is your test secret API key.
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-      apiVersion: STRIPE_PRODUCT_API_VERSION,
-    })
-    if (!stripe) redirect(`/labs/landing-page`)
-
     const paymentIntentId = searchParams.payment_intent?.toString()
 
     if (!paymentIntentId) redirect(`/labs/landing-page`)
 
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+    const paymentIntent = await stripeProduct.paymentIntents.retrieve(
+      paymentIntentId
+    )
     const orderId = paymentIntent.metadata.orderId
 
     if (orderId) {

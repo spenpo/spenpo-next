@@ -27,12 +27,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { markInvoicePaidFromPaymentIntent } from '@/app/utils/billing'
 import { sendInvoiceEventEmail } from '@/app/utils/billingEmails'
-import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
-
-// This is your test secret API key.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: STRIPE_PRODUCT_API_VERSION,
-})
+import { stripeProduct } from '@/app/utils/stripe'
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -53,7 +48,8 @@ export async function POST(req: NextRequest) {
   let event
 
   try {
-    if (sig) event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret)
+    if (sig)
+      event = stripeProduct.webhooks.constructEvent(rawBody, sig, endpointSecret)
   } catch (err: any) {
     return NextResponse.json({
       status: 400,
