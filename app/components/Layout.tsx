@@ -9,7 +9,7 @@ import React from 'react'
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname()
 
-  const hideLayoutPaths = ['/products/landing-page/design']
+  const hideLayoutPaths = ['/products/landing-page/design', '/labs/landing-page/design']
 
   return (
     <>
