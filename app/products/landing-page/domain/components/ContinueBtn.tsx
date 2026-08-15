@@ -20,7 +20,9 @@ export const ContinueBtn: React.FC<{
   const [loading, setLoading] = useState(false)
 
   const domainName = String(searchParams?.get('d'))
-  const price = searchParams?.get('p') ? Number(searchParams?.get('p')) * 100 : 0
+  const price = searchParams?.get('p')
+    ? Math.round(Number(searchParams?.get('p')) * 100)
+    : 0
   const renew = paymentIntentMetadata.renew
 
   return (

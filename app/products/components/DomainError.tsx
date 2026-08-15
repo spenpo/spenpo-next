@@ -8,15 +8,18 @@ interface DomainErrorProps {
   errorMessage?: string
 }
 
-export const DomainError: React.FC<DomainErrorProps> = ({ errorMessage }) => {
+export const DomainError: React.FC<DomainErrorProps> = ({
+  domainName,
+  errorMessage,
+}) => {
   const { setRateLimit } = useRateLimit()
 
   useEffect(() => {
     if (errorMessage) {
-      // Check if it's a rate limit error
-      const isRateLimit = /rate limit|try again in/i.test(errorMessage)
+      const isRateLimit = /rate limit|try again in|too_many_requests/i.test(
+        errorMessage
+      )
       if (isRateLimit) {
-        // Extract retry seconds from error message
         const match = errorMessage.match(/try again in (\d+) seconds?/i)
         const seconds = match ? parseInt(match[1], 10) : null
         setRateLimit(seconds)
@@ -32,7 +35,14 @@ export const DomainError: React.FC<DomainErrorProps> = ({ errorMessage }) => {
       p={1}
       color="red"
     >
-      <Typography>{errorMessage?.slice(20, 44) || 'Error'}</Typography>
+      {domainName && (
+        <Typography variant="body2" sx={{ mb: 0.5 }}>
+          {domainName}
+        </Typography>
+      )}
+      <Typography variant="caption" sx={{ display: 'block', wordBreak: 'break-word' }}>
+        {errorMessage || 'Error'}
+      </Typography>
     </Box>
   )
 }

@@ -4,11 +4,13 @@ import { Domain } from './Domain'
 import { LoadMoreBtn } from './LoadMoreBtn'
 import { DomainField } from './DomainField'
 import { RateLimitProvider } from './RateLimitContext'
+import { DomainError } from './DomainError'
 import { LIMIT_INCREMENT, TLDS } from '../constants'
 import { PageProps } from '@/app/types/app'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/constants/api'
 import redis from '@/app/utils/redis'
+import { getDomainsAvailability } from '@/app/services/vercel'
 
 export async function SelectDomain({
   searchParams,
@@ -45,6 +47,19 @@ export async function SelectDomain({
     } else break
   }
 
+  let availabilityByName: Record<string, boolean> = {}
+  let availabilityError: string | undefined
+
+  if (q && q.length > 2 && domainNames.length > 0) {
+    const availability = await getDomainsAvailability(domainNames)
+    if ('error' in availability) availabilityError = availability.error.message
+    else {
+      for (const result of availability.results) {
+        availabilityByName[result.domain] = result.available
+      }
+    }
+  }
+
   return (
     <RateLimitProvider>
       <Stack maxWidth="70em" width="-webkit-fill-available" mx="auto" gap={5}>
@@ -52,8 +67,14 @@ export async function SelectDomain({
           <DomainField defaultRenew={defaultRenew} />
         </Stack>
         <Grid container spacing={1} width="100%">
+          {q && q.length > 2 && availabilityError && (
+            <Grid item xs={12}>
+              <DomainError domainName={q} errorMessage={availabilityError} />
+            </Grid>
+          )}
           {q &&
             q.length > 2 &&
+            !availabilityError &&
             domainNames.map((domainName) => (
               <Grid item xs={12} sm={6} md={3} key={domainName}>
                 <Suspense
@@ -68,7 +89,10 @@ export async function SelectDomain({
                     </Box>
                   }
                 >
-                  <Domain domainName={domainName} />
+                  <Domain
+                    domainName={domainName}
+                    available={availabilityByName[domainName]}
+                  />
                 </Suspense>
               </Grid>
             ))}

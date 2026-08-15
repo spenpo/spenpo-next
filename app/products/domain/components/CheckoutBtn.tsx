@@ -25,7 +25,9 @@ export const CheckoutBtn: React.FC<{
 
   const domainName = String(searchParams?.get('d'))
   const projectName = paymentIntentMetadata.projectName
-  const price = searchParams?.get('p') ? Number(searchParams?.get('p')) * 100 : 0
+  const price = searchParams?.get('p')
+    ? Math.round(Number(searchParams?.get('p')) * 100)
+    : 0
   const renew = paymentIntentMetadata.renew
 
   return (

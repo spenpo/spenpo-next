@@ -19,44 +19,56 @@ const Unavailable: React.FC<{ children: ReactNode }> = ({ children }) => (
 
 const getStatus = async (domain: string) =>
   unstable_cache(
-    async (name) => {
-      const req = await getDomainStatus(name)
-      const res = await req.json()
-      return res
-    },
+    async (name) => getDomainStatus(name),
     ['domain-product-status'],
     { tags: [domain] }
   )(domain)
 
 const getPrice = async (domain: string) =>
   unstable_cache(
-    async (name) => {
-      const req = await getDomainPrice(name)
-      const res = await req.json()
-      return res
-    },
+    async (name) => getDomainPrice(name),
     ['domain-product-price'],
     { tags: [domain] }
   )(domain)
 
-export const Domain = async ({ domainName }: { domainName: string }) => {
-  const status = await getStatus(domainName)
-
-  if (status?.available === undefined) {
+export const Domain = async ({
+  domainName,
+  available,
+  availabilityError,
+}: {
+  domainName: string
+  available?: boolean
+  availabilityError?: string
+}) => {
+  if (availabilityError) {
     revalidateTag(domainName)
     return (
-      <DomainError domainName={domainName} errorMessage={status?.error?.message} />
+      <DomainError domainName={domainName} errorMessage={availabilityError} />
     )
   }
 
-  if (status.available === false) return <Unavailable>{domainName}</Unavailable>
+  const status =
+    typeof available === 'boolean' ? { available } : await getStatus(domainName)
 
-  if (status.available === true) {
-    const price = await getPrice(domainName)
-
-    if (!!price?.price)
-      return <AvailableDomain domainName={domainName} price={price.price} />
-    return <Unavailable>{domainName}</Unavailable>
+  if ('error' in status) {
+    revalidateTag(domainName)
+    return (
+      <DomainError domainName={domainName} errorMessage={status.error.message} />
+    )
   }
+
+  if (!status.available) return <Unavailable>{domainName}</Unavailable>
+
+  const price = await getPrice(domainName)
+
+  if (price && 'error' in price) {
+    revalidateTag(domainName)
+    return (
+      <DomainError domainName={domainName} errorMessage={price.error.message} />
+    )
+  }
+
+  if (price?.price != null)
+    return <AvailableDomain domainName={domainName} price={String(price.price)} />
   return <Unavailable>{domainName}</Unavailable>
 }

@@ -47,3 +47,5 @@ public/static/svelte-apps
 
 # Libby export artifact (import via WP admin/API; not runtime data)
 books.json
+
+.cursor

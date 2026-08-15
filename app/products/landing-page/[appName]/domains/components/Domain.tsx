@@ -27,9 +27,8 @@ export async function Domain({
     const domainReq = await getDomainInfo(name)
     const d = await domainReq.json()
     domain = d?.domain
-    const priceReq = await getDomainPrice(name)
-    const p = await priceReq.json()
-    price = p.price
+    const p = await getDomainPrice(name)
+    if (!('error' in p)) price = p.renewalPrice ?? p.price
   }
   return (
     <Stack p={3} border="solid #aaa" borderRadius={1} key={name} gap={3}>
