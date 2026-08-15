@@ -25,7 +25,7 @@ const TABS: TabProps[] = [
   { id: 'about' },
   {
     id: 'work',
-    menuItems: ['projects', 'resume', 'blog', 'books', 'labs'],
+    menuItems: ['projects', 'resume', 'blog', 'labs'],
   },
   { id: 'consulting' },
   { id: 'now' },

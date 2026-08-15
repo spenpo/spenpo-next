@@ -123,11 +123,6 @@ export const Footer: React.FC = () => {
               Writing
             </Typography>
           </FooterBullet>
-          <FooterBullet>
-            <Typography variant="body2" component="a" href="/books">
-              Books
-            </Typography>
-          </FooterBullet>
         </Stack>
         <Stack
           gap={1}
@@ -145,8 +140,8 @@ export const Footer: React.FC = () => {
             Resources
           </Typography>
           <FooterBullet>
-            <Typography variant="body2" component="a" href="/about">
-              About
+            <Typography variant="body2" component="a" href="/books">
+              Books I&apos;ve read
             </Typography>
           </FooterBullet>
           <FooterBullet>
