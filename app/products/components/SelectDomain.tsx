@@ -47,7 +47,7 @@ export async function SelectDomain({
     } else break
   }
 
-  let availabilityByName: Record<string, boolean> = {}
+  const availabilityByName: Record<string, boolean> = {}
   let availabilityError: string | undefined
 
   if (q && q.length > 2 && domainNames.length > 0) {

@@ -109,7 +109,17 @@ const parsePrice = (value: unknown) => {
   return Number.isFinite(n) ? n : undefined
 }
 
-const registrarError = (data: any, status?: number): RegistrarError => {
+type RegistrarErrorInput = {
+  retryAfter?: { value?: number }
+  error?: { message?: string; code?: string }
+  message?: string
+  code?: string
+}
+
+const registrarError = (
+  data: RegistrarErrorInput | null | undefined,
+  status?: number
+): RegistrarError => {
   const seconds = data?.retryAfter?.value
   const code = data?.error?.code ?? data?.code
   const message =
@@ -162,8 +172,8 @@ const getRegistrarContact = () => {
       }
     }
     return contact
-  } catch (err: any) {
-    if (err?.error) throw err
+  } catch (err) {
+    if (err && typeof err === 'object' && 'error' in err) throw err
     throw {
       error: { message: 'DOMAIN_REGISTRANT_CONTACT must be valid JSON' },
     }
