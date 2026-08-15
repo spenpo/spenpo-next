@@ -6,25 +6,25 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(cuid()) @db.VarChar(255)
+  userId            String  @db.VarChar(255)
+  type              String  @db.VarChar(255)
+  provider          String  @db.VarChar(255)
+  providerAccountId String  @db.VarChar(255)
+  refresh_token     String? @db.VarChar(255)
+  access_token      String? @db.VarChar(255)
+  expires_at        Int?
+  token_type        String? @db.VarChar(255)
+  scope             String? @db.VarChar(255)
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -33,9 +33,9 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
+  id           String   @id @default(cuid()) @db.VarChar(255)
+  sessionToken String   @unique @db.VarChar(255)
+  userId       String   @db.VarChar(255)
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -43,11 +43,11 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
+  id            String    @id @default(cuid()) @db.VarChar(255)
+  name          String?   @db.VarChar(255)
+  email         String?   @unique @db.VarChar(255)
   emailVerified DateTime?
-  image         String?
+  image         String?   @db.VarChar(255)
   accounts      Account[]
   sessions      Session[]
   orders        Order[]
@@ -56,55 +56,55 @@ model User {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
+  identifier String   @db.VarChar(255)
+  token      String   @unique @db.VarChar(255)
   expires    DateTime
 
-  @@unique([identifier, token])
+  @@id([identifier, token])
   @@map("wp_nextauth_verification_tokens")
 }
 
 model Product {
-  id            String    @id @default(cuid())
-  name          String
-  description   String
-  price         Float
-  orders        Order[]
-  hide          Boolean   @default(false)
-  learnMore     String?
-  buyNow        String?
+  id          String  @id @default(cuid()) @db.VarChar(255)
+  name        String  @db.VarChar(255)
+  description String  @db.Text
+  price       Float
+  orders      Order[]
+  hide        Boolean @default(false)
+  learnMore   String? @db.VarChar(255)
+  buyNow      String? @db.VarChar(255)
 
   @@map("wp_spenpo_products")
 }
 
 model Order {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId     String
-  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  metadata      Json?
-  complete      Boolean   @default(false)
-  error         Json?
-  environment   String
+  id          String  @id @default(cuid()) @db.VarChar(255)
+  userId      String  @db.VarChar(255)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String  @db.VarChar(255)
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  metadata    Json?
+  complete    Boolean @default(false)
+  error       Json?
+  environment String  @db.VarChar(255)
 
   @@map("wp_spenpo_orders")
 }
 
 model Mandarin {
-  id            Int    @id @default(autoincrement())
-  traditional   String
-  simplified    String
-  pinyin        String
-  meaning       String
+  id          Int    @id @default(autoincrement())
+  traditional String @db.VarChar(255)
+  simplified  String @db.VarChar(255)
+  pinyin      String @db.VarChar(255)
+  meaning     String @db.VarChar(255)
 
   @@map("wp_spenpo_mandarin")
 }
 
 model Truth {
-  id            Int    @id @default(autoincrement())
-  sentence      String
-  is_true       Boolean
+  id       Int     @id @default(autoincrement())
+  sentence String  @db.Text
+  is_true  Boolean
 
   @@map("wp_spenpo_truth")
 }

@@ -1,17 +1,17 @@
 -- CreateTable
 CREATE TABLE `wp_nextauth_accounts` (
-    `id` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
-    `type` VARCHAR(191) NOT NULL,
-    `provider` VARCHAR(191) NOT NULL,
-    `providerAccountId` VARCHAR(191) NOT NULL,
-    `refresh_token` VARCHAR(191) NULL,
-    `access_token` VARCHAR(191) NULL,
+    `id` VARCHAR(255) NOT NULL,
+    `userId` VARCHAR(255) NOT NULL,
+    `type` VARCHAR(255) NOT NULL,
+    `provider` VARCHAR(255) NOT NULL,
+    `providerAccountId` VARCHAR(255) NOT NULL,
+    `refresh_token` VARCHAR(255) NULL,
+    `access_token` VARCHAR(255) NULL,
     `expires_at` INTEGER NULL,
-    `token_type` VARCHAR(191) NULL,
-    `scope` VARCHAR(191) NULL,
-    `id_token` VARCHAR(191) NULL,
-    `session_state` VARCHAR(191) NULL,
+    `token_type` VARCHAR(255) NULL,
+    `scope` VARCHAR(255) NULL,
+    `id_token` TEXT NULL,
+    `session_state` VARCHAR(255) NULL,
 
     UNIQUE INDEX `wp_nextauth_accounts_provider_providerAccountId_key`(`provider`, `providerAccountId`),
     PRIMARY KEY (`id`)
@@ -19,9 +19,9 @@ CREATE TABLE `wp_nextauth_accounts` (
 
 -- CreateTable
 CREATE TABLE `wp_nextauth_sessions` (
-    `id` VARCHAR(191) NOT NULL,
-    `sessionToken` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(255) NOT NULL,
+    `sessionToken` VARCHAR(255) NOT NULL,
+    `userId` VARCHAR(255) NOT NULL,
     `expires` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `wp_nextauth_sessions_sessionToken_key`(`sessionToken`),
@@ -30,11 +30,11 @@ CREATE TABLE `wp_nextauth_sessions` (
 
 -- CreateTable
 CREATE TABLE `wp_nextauth_users` (
-    `id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NULL,
-    `email` VARCHAR(191) NULL,
+    `id` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(255) NULL,
+    `email` VARCHAR(255) NULL,
     `emailVerified` DATETIME(3) NULL,
-    `image` VARCHAR(191) NULL,
+    `image` VARCHAR(255) NULL,
 
     UNIQUE INDEX `wp_nextauth_users_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -42,36 +42,36 @@ CREATE TABLE `wp_nextauth_users` (
 
 -- CreateTable
 CREATE TABLE `wp_nextauth_verification_tokens` (
-    `identifier` VARCHAR(191) NOT NULL,
-    `token` VARCHAR(191) NOT NULL,
+    `identifier` VARCHAR(255) NOT NULL,
+    `token` VARCHAR(255) NOT NULL,
     `expires` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `wp_nextauth_verification_tokens_token_key`(`token`),
-    UNIQUE INDEX `wp_nextauth_verification_tokens_identifier_token_key`(`identifier`, `token`)
+    PRIMARY KEY (`identifier`, `token`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `wp_spenpo_products` (
-    `id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `description` TEXT NOT NULL,
     `price` DOUBLE NOT NULL,
     `hide` BOOLEAN NOT NULL DEFAULT false,
-    `learnMore` VARCHAR(191) NULL,
-    `buyNow` VARCHAR(191) NULL,
+    `learnMore` VARCHAR(255) NULL,
+    `buyNow` VARCHAR(255) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `wp_spenpo_orders` (
-    `id` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
-    `productId` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(255) NOT NULL,
+    `userId` VARCHAR(255) NOT NULL,
+    `productId` VARCHAR(255) NOT NULL,
     `metadata` JSON NULL,
     `complete` BOOLEAN NOT NULL DEFAULT false,
     `error` JSON NULL,
-    `environment` VARCHAR(191) NOT NULL,
+    `environment` VARCHAR(255) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -79,10 +79,10 @@ CREATE TABLE `wp_spenpo_orders` (
 -- CreateTable
 CREATE TABLE `wp_spenpo_mandarin` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `traditional` VARCHAR(191) NOT NULL,
-    `simplified` VARCHAR(191) NOT NULL,
-    `pinyin` VARCHAR(191) NOT NULL,
-    `meaning` VARCHAR(191) NOT NULL,
+    `traditional` VARCHAR(255) NOT NULL,
+    `simplified` VARCHAR(255) NOT NULL,
+    `pinyin` VARCHAR(255) NOT NULL,
+    `meaning` VARCHAR(255) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -90,7 +90,7 @@ CREATE TABLE `wp_spenpo_mandarin` (
 -- CreateTable
 CREATE TABLE `wp_spenpo_truth` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `sentence` VARCHAR(191) NOT NULL,
+    `sentence` TEXT NOT NULL,
     `is_true` BOOLEAN NOT NULL,
 
     PRIMARY KEY (`id`)
