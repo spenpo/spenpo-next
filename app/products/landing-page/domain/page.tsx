@@ -36,7 +36,7 @@ export default async function DomainStep({ searchParams }: PageProps) {
   return (
     <Stack m={{ xs: 2, sm: 5 }} gap={5} flex={1} justifyContent="flex-start">
       <Stack>
-        <Stepper activeStep={1} />
+        <Stepper />
       </Stack>
       <Stack
         justifyContent="space-between"

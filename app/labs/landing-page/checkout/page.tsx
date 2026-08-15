@@ -22,7 +22,7 @@ export default async function Checkout() {
 
   return (
     <Stack rowGap={1} m={{ xs: 2, sm: 5 }}>
-      <Stepper activeStep={3} />
+      <Stepper />
       <Stack
         direction={{ xl: 'row', lg: 'row', md: 'row' }}
         justifyContent="space-around"

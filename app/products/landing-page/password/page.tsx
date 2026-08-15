@@ -22,7 +22,7 @@ export default async function Password() {
   return (
     <Stack gap={5} flex={1} justifyContent="flex-start" m={{ xs: 2, sm: 5 }}>
       <Stack>
-        <Stepper activeStep={2} />
+        <Stepper />
       </Stack>
       <Stack
         justifyContent="space-between"
