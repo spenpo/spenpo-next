@@ -13,6 +13,7 @@ import React, { useContext } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { useCachedSignin } from '@/app/hooks/useCachedSignin'
 import LanguageIcon from '@mui/icons-material/Language'
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import { useRouter } from 'next/navigation'
 import { MenuContext } from './Menu'
 
@@ -65,8 +66,14 @@ export const AvatarMenu: React.FC = () => {
                 </ListItemIcon>
                 My Sites
               </MenuItem>,
+              <MenuItem key={2} onClick={() => router.push('/account/billing')}>
+                <ListItemIcon>
+                  <ReceiptLongIcon fontSize="small" />
+                </ListItemIcon>
+                Billing
+              </MenuItem>,
               <MenuItem
-                key={2}
+                key={3}
                 onClick={() =>
                   signOut({
                     redirect: false,

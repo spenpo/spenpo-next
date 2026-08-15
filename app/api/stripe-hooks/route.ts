@@ -25,10 +25,13 @@ import redis from '@/app/utils/redis'
 import { JsonObject } from '@prisma/client/runtime/library'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { markInvoicePaidFromPaymentIntent } from '@/app/utils/billing'
+import { sendInvoiceEventEmail } from '@/app/utils/billingEmails'
+import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
 
 // This is your test secret API key.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-08-16',
+  apiVersion: STRIPE_PRODUCT_API_VERSION,
 })
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -60,10 +63,36 @@ export async function POST(req: NextRequest) {
 
   switch (event?.type) {
     case 'payment_intent.succeeded':
-      const paymentIntentSucceeded = event.data.object
-      console.log('payment intent succeeded')
-      console.log(paymentIntentSucceeded)
+      const paymentIntentSucceeded = event.data.object as Stripe.PaymentIntent
+      if (paymentIntentSucceeded.metadata?.stripeInvoiceId) {
+        try {
+          await markInvoicePaidFromPaymentIntent(paymentIntentSucceeded)
+        } catch (err: any) {
+          console.log('billing invoice pay error', err?.message || err)
+        }
+      } else {
+        console.log('payment intent succeeded')
+        console.log(paymentIntentSucceeded)
+      }
 
+      break
+    case 'invoice.created':
+    case 'invoice.finalized':
+    case 'invoice.overdue':
+    case 'invoice.paid':
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice
+      console.log(event.type, invoice.id)
+      try {
+        await sendInvoiceEventEmail(event.type, invoice)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('billing invoice email error', message)
+      }
+      break
+    }
+    case 'invoice.voided':
+      console.log(event.type, (event.data.object as Stripe.Invoice).id)
       break
     case 'charge.succeeded':
       const CHARGE_SUCCEEDED = event.data.object

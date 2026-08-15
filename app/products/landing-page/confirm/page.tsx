@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth'
 import Stripe from 'stripe'
 import Link from 'next/link'
 import { PageProps } from '@/app/types/app'
+import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
 import { ViewYourSitesBtn } from '../../components/confirm/ViewYourSitesBtn'
 import redis from '@/app/utils/redis'
 import { getProject } from '@/app/services/vercel'
@@ -28,7 +29,7 @@ export default async function Confirm({ searchParams }: PageProps) {
   if (session) {
     // This is your test secret API key.
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-      apiVersion: '2023-08-16',
+      apiVersion: STRIPE_PRODUCT_API_VERSION,
     })
     if (!stripe) redirect(`/products/landing-page`)
 

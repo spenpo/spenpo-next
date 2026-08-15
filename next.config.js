@@ -3,6 +3,7 @@ const nextConfig = {}
 
 module.exports = {
   ...nextConfig,
+  transpilePackages: ['react-email', '@react-email/render'],
   webpack: (config) => {
     config.experiments = { ...config.experiments, topLevelAwait: true }
     // Grab the existing rule that handles SVG imports

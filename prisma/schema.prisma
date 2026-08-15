@@ -43,14 +43,15 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid()) @db.VarChar(255)
-  name          String?   @db.VarChar(255)
-  email         String?   @unique @db.VarChar(255)
-  emailVerified DateTime?
-  image         String?   @db.VarChar(255)
-  accounts      Account[]
-  sessions      Session[]
-  orders        Order[]
+  id               String    @id @default(cuid()) @db.VarChar(255)
+  name             String?   @db.VarChar(255)
+  email            String?   @unique @db.VarChar(255)
+  emailVerified    DateTime?
+  image            String?   @db.VarChar(255)
+  stripeCustomerId String?   @unique @db.VarChar(255)
+  accounts         Account[]
+  sessions         Session[]
+  orders           Order[]
 
   @@map("wp_nextauth_users")
 }

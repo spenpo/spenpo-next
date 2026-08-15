@@ -48,7 +48,7 @@ const STEP_COPY = [
         </Typography>
       </>
     ),
-    link: ['https://spenpo-landing.vercel.app', 'https://www.spenpo.net'],
+    link: ['https://spenpo-landing.vercel.app'],
   },
   {
     copy: (

@@ -3,10 +3,11 @@ import { NextResponse, NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import Stripe from 'stripe'
 import { authOptions } from '../../constants/api'
+import { STRIPE_PRODUCT_API_VERSION } from '@/app/utils/stripe'
 
 // This is your test secret API key.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-08-16',
+  apiVersion: STRIPE_PRODUCT_API_VERSION,
 })
 
 export async function POST(req: NextRequest) {
