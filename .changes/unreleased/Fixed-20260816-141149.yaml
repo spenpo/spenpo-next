@@ -1,3 +1,0 @@
-kind: Fixed
-body: Check-your-email keeps the return path, draft cache, and invoice email when using a different address.
-time: 2026-08-16T14:11:49.874941+08:00

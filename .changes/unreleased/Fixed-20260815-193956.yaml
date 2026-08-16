@@ -1,3 +1,0 @@
-kind: Fixed
-body: Allow Next.js builds to collect Stripe routes when STRIPE_SECRET_KEY is unset at compile time
-time: 2026-08-15T19:39:56.39171+08:00
