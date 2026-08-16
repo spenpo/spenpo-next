@@ -1,0 +1,3 @@
+kind: Fixed
+body: Stop expanding Stripe subscription products five levels deep so the payment methods page can load
+time: 2026-08-16T12:06:38.127802+08:00

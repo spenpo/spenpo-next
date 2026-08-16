@@ -206,7 +206,7 @@ const SUBSCRIPTION_EXPAND = [
 ] as const
 
 const SUBSCRIPTION_LIST_EXPAND = [
-  'data.items.data.price.product',
+  'data.items.data.price',
   'data.default_payment_method',
 ] as const
 
