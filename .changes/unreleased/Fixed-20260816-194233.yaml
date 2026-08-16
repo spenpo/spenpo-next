@@ -1,0 +1,3 @@
+kind: Fixed
+body: Apply the 2% bank invoice discount on subscriptions and draft invoices, since Stripe no longer allows customer-level coupons via the API
+time: 2026-08-16T19:42:33.122971+08:00

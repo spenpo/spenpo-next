@@ -29,6 +29,10 @@ import {
   sendFirstPaymentMethodEmail,
   sendInvoiceEventEmail,
 } from '@/app/utils/billingEmails'
+import {
+  reconcileDraftInvoiceBankDiscount,
+  reconcileSubscriptionBankDiscount,
+} from '@/app/utils/billing'
 import { stripeProduct } from '@/app/utils/stripe'
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -66,7 +70,24 @@ export async function POST(req: NextRequest) {
         (event.data.object as Stripe.PaymentIntent).id
       )
       break
-    case 'invoice.created':
+    case 'invoice.created': {
+      const invoice = event.data.object as Stripe.Invoice
+      console.log(event.type, invoice.id)
+      try {
+        await reconcileDraftInvoiceBankDiscount(invoice.id)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('billing invoice bank discount error', message)
+        return NextResponse.json({ error: message }, { status: 500 })
+      }
+      try {
+        await sendInvoiceEventEmail(event.type, invoice)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('billing invoice email error', message)
+      }
+      break
+    }
     case 'invoice.finalized':
     case 'invoice.overdue':
     case 'invoice.paid':
@@ -92,6 +113,18 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         console.log('billing first-method email error', message)
+      }
+      break
+    }
+    case 'customer.subscription.created': {
+      const subscription = event.data.object as Stripe.Subscription
+      console.log(event.type, subscription.id)
+      try {
+        await reconcileSubscriptionBankDiscount(subscription.id)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('billing subscription bank discount error', message)
+        return NextResponse.json({ error: message }, { status: 500 })
       }
       break
     }

@@ -215,6 +215,10 @@ export function subscriptionCustomerId(subscription: Stripe.Subscription): strin
   return typeof customer === 'string' ? customer : customer.id
 }
 
+function isCurrentSubscription(status: Stripe.Subscription.Status) {
+  return status !== 'canceled' && status !== 'incomplete_expired'
+}
+
 export function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   const subscription = invoice.parent?.subscription_details?.subscription
   if (!subscription) return null
@@ -347,30 +351,103 @@ export async function getBankDiscountCouponId() {
   return created.id
 }
 
-type CustomerDiscountUpdate = Stripe.CustomerUpdateParams & {
-  discounts?: Array<{ coupon: string }> | ''
+type BankDiscountParams = Stripe.InvoiceUpdateParams['discounts']
+
+async function discountsForPaymentMethodType(
+  paymentMethodType: string | null | undefined
+): Promise<BankDiscountParams> {
+  if (paymentMethodType !== 'us_bank_account') return ''
+  return [{ coupon: await getBankDiscountCouponId() }]
+}
+
+async function customerDefaultPaymentMethodType(customerId: string) {
+  const customer = await stripeBilling.customers.retrieve(customerId, {
+    expand: ['invoice_settings.default_payment_method'],
+  })
+  if (customer.deleted) return null
+
+  const method = customer.invoice_settings.default_payment_method
+  if (!method) return null
+  if (typeof method === 'string') {
+    const retrieved = await stripeBilling.paymentMethods.retrieve(method)
+    return retrieved.type
+  }
+  return method.type
+}
+
+async function applyBankDiscountToSubscription(
+  subscriptionId: string,
+  discounts: BankDiscountParams
+) {
+  await stripeBilling.subscriptions.update(subscriptionId, {
+    discounts,
+    proration_behavior: 'none',
+  })
+}
+
+async function applyBankDiscountToDraftInvoice(
+  invoice: Stripe.Invoice,
+  discounts: BankDiscountParams
+) {
+  if (invoice.status !== 'draft') return
+  await stripeBilling.invoices.update(invoice.id, { discounts })
 }
 
 export async function reconcileCustomerBankDiscount(
   customerId: string,
   paymentMethodType: string | null
 ) {
-  const wantsDiscount = paymentMethodType === 'us_bank_account'
+  const discounts = await discountsForPaymentMethodType(paymentMethodType)
+  const updates: Promise<unknown>[] = []
 
-  if (!wantsDiscount) {
-    try {
-      await stripeBilling.customers.deleteDiscount(customerId)
-    } catch (err) {
-      const code = err instanceof Stripe.errors.StripeError ? err.code : null
-      if (code !== 'resource_missing') throw err
-    }
-    return
+  for await (const subscription of stripeBilling.subscriptions.list({
+    customer: customerId,
+    status: 'all',
+    limit: 100,
+  })) {
+    if (!isCurrentSubscription(subscription.status)) continue
+    updates.push(applyBankDiscountToSubscription(subscription.id, discounts))
   }
 
-  const couponId = await getBankDiscountCouponId()
-  await stripeBilling.customers.update(customerId, {
-    discounts: [{ coupon: couponId }],
-  } as CustomerDiscountUpdate)
+  for await (const invoice of stripeBilling.invoices.list({
+    customer: customerId,
+    status: 'draft',
+    limit: 100,
+  })) {
+    updates.push(applyBankDiscountToDraftInvoice(invoice, discounts))
+  }
+
+  await Promise.all(updates)
+}
+
+export async function reconcileDraftInvoiceBankDiscount(invoiceId: string) {
+  const invoice = await stripeBilling.invoices.retrieve(invoiceId)
+  if (invoice.status !== 'draft') return
+
+  const customerId = invoiceCustomerId(invoice)
+  if (!customerId) return
+
+  const discounts = await discountsForPaymentMethodType(
+    await customerDefaultPaymentMethodType(customerId)
+  )
+  await applyBankDiscountToDraftInvoice(invoice, discounts)
+
+  const subscriptionId = invoiceSubscriptionId(invoice)
+  if (!subscriptionId) return
+
+  const subscription = await stripeBilling.subscriptions.retrieve(subscriptionId)
+  if (!isCurrentSubscription(subscription.status)) return
+  await applyBankDiscountToSubscription(subscription.id, discounts)
+}
+
+export async function reconcileSubscriptionBankDiscount(subscriptionId: string) {
+  const subscription = await stripeBilling.subscriptions.retrieve(subscriptionId)
+  if (!isCurrentSubscription(subscription.status)) return
+
+  const discounts = await discountsForPaymentMethodType(
+    await customerDefaultPaymentMethodType(subscriptionCustomerId(subscription))
+  )
+  await applyBankDiscountToSubscription(subscription.id, discounts)
 }
 
 export async function ownedPaymentMethod(
@@ -439,12 +516,8 @@ export async function prepareInvoicePayment(
   let current = invoice
 
   if (current.status === 'draft') {
-    const couponId = await getBankDiscountCouponId()
-    const invoiceDiscounts: Stripe.InvoiceUpdateParams['discounts'] =
-      paymentMethodType === 'us_bank_account' ? [{ coupon: couponId }] : ''
-
     await stripeBilling.invoices.update(current.id, {
-      discounts: invoiceDiscounts,
+      discounts: await discountsForPaymentMethodType(paymentMethodType),
       auto_advance: false,
     })
 
@@ -477,10 +550,6 @@ export async function prepareInvoicePayment(
     customerSessionClientSecret: await sessionSecretPromise,
     invoice: serializeInvoice(current),
   }
-}
-
-function isCurrentSubscription(status: Stripe.Subscription.Status) {
-  return status !== 'canceled' && status !== 'incomplete_expired'
 }
 
 export async function listCustomerSubscriptions(customerId: string) {
