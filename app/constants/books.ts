@@ -30,6 +30,8 @@ export type BookReview = {
   excerpt: {
     rendered: string
   }
+  /** Hostinger AI External Featured Image URL (`_thumbnail_ext_url`). */
+  external_featured_image?: string
   meta?: BookReviewMeta
   _embedded?: {
     'wp:featuredmedia'?: {
@@ -47,5 +49,7 @@ export const getAffiliateIsbn = (meta?: BookReviewMeta): string => {
 export const getBookCoverUrl = (review: BookReview): string | null => {
   const featured = review._embedded?.['wp:featuredmedia']?.[0]?.source_url
   if (featured) return featured
+  const external = review.external_featured_image?.trim()
+  if (external) return external
   return review.meta?.libby_cover_url || null
 }
