@@ -1,5 +1,5 @@
 'use client'
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { FormEvent, useCallback, useEffect, useState } from 'react'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import {
   Elements,
@@ -86,12 +86,18 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
   )
 }
 
+type PayReady = {
+  clientSecret: string
+  customerSessionClientSecret: string | null
+  invoice: SerializedInvoice
+}
+
 function DraftPriceChoice({
   invoice,
   onReady,
 }: {
   invoice: SerializedInvoice
-  onReady: (clientSecret: string, nextInvoice: SerializedInvoice) => void
+  onReady: (ready: PayReady) => void
 }) {
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<'card' | 'us_bank_account' | null>(null)
@@ -112,7 +118,11 @@ function DraftPriceChoice({
       setIsLoading(null)
       return
     }
-    onReady(result.clientSecret, result.invoice)
+    onReady({
+      clientSecret: result.clientSecret,
+      customerSessionClientSecret: result.customerSessionClientSecret ?? null,
+      invoice: result.invoice,
+    })
   }
 
   return (
@@ -149,9 +159,17 @@ function DraftPriceChoice({
 
 export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [customerSessionClientSecret, setCustomerSessionClientSecret] =
+    useState<string | null>(null)
   const [payable, setPayable] = useState(invoice)
   const [message, setMessage] = useState<string | null>(null)
   const [loadingSecret, setLoadingSecret] = useState(invoice.status === 'open')
+
+  const applyReady = useCallback((ready: PayReady) => {
+    setPayable(ready.invoice)
+    setClientSecret(ready.clientSecret)
+    setCustomerSessionClientSecret(ready.customerSessionClientSecret)
+  }, [])
 
   useEffect(() => {
     if (invoice.status !== 'open') return
@@ -170,26 +188,21 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
         setLoadingSecret(false)
         return
       }
-      setPayable(result.invoice)
-      setClientSecret(result.clientSecret)
+      applyReady({
+        clientSecret: result.clientSecret,
+        customerSessionClientSecret: result.customerSessionClientSecret ?? null,
+        invoice: result.invoice,
+      })
       setLoadingSecret(false)
     }
     load()
     return () => {
       cancelled = true
     }
-  }, [invoice.id, invoice.status])
+  }, [applyReady, invoice.id, invoice.status])
 
   if (invoice.status === 'draft' && !clientSecret) {
-    return (
-      <DraftPriceChoice
-        invoice={invoice}
-        onReady={(secret, nextInvoice) => {
-          setPayable(nextInvoice)
-          setClientSecret(secret)
-        }}
-      />
-    )
+    return <DraftPriceChoice invoice={invoice} onReady={applyReady} />
   }
 
   if (loadingSecret) {
@@ -206,6 +219,7 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
       options={{
         clientSecret,
         appearance: { theme: 'stripe' },
+        ...(customerSessionClientSecret ? { customerSessionClientSecret } : {}),
       }}
     >
       <PayForm invoice={payable} />

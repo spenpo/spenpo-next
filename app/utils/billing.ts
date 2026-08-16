@@ -402,10 +402,40 @@ function invoiceConfirmationSecret(invoice: Stripe.Invoice): string | null {
   return secret.client_secret ?? null
 }
 
+async function paymentElementCustomerSessionSecret(customerId: string) {
+  try {
+    const session = await stripeBilling.customerSessions.create({
+      customer: customerId,
+      components: {
+        payment_element: {
+          enabled: true,
+          features: {
+            payment_method_redisplay: 'enabled',
+            payment_method_allow_redisplay_filters: [
+              'always',
+              'limited',
+              'unspecified',
+            ],
+          },
+        },
+      },
+    })
+    return session.client_secret
+  } catch {
+    return null
+  }
+}
+
 export async function prepareInvoicePayment(
   invoice: Stripe.Invoice,
   paymentMethodType?: 'card' | 'us_bank_account'
 ) {
+  const customerId = invoiceCustomerId(invoice)
+  if (!customerId) {
+    return { error: 'This invoice cannot be paid', status: 409 as const }
+  }
+
+  const sessionSecretPromise = paymentElementCustomerSessionSecret(customerId)
   let current = invoice
 
   if (current.status === 'draft') {
@@ -444,6 +474,7 @@ export async function prepareInvoicePayment(
 
   return {
     clientSecret,
+    customerSessionClientSecret: await sessionSecretPromise,
     invoice: serializeInvoice(current),
   }
 }
