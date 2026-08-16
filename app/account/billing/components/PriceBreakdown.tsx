@@ -2,29 +2,29 @@ import { Stack, Typography } from '@mui/material'
 import { formatMoney } from '@/app/utils/billing'
 
 export function PriceBreakdown({
-  amountDue,
-  surcharge,
+  subtotal,
+  discountAmount,
   total,
   currency,
-  estimated,
 }: {
-  amountDue: number
-  surcharge: number
+  subtotal: number
+  discountAmount: number
   total: number
   currency: string
-  estimated?: boolean
 }) {
   return (
     <Stack gap={0.5}>
       <Stack direction="row" justifyContent="space-between">
-        <Typography>Invoice</Typography>
-        <Typography>{formatMoney(amountDue, currency)}</Typography>
+        <Typography>Subtotal</Typography>
+        <Typography>{formatMoney(subtotal, currency)}</Typography>
       </Stack>
       <Stack direction="row" justifyContent="space-between">
+        <Typography>Bank discount (2%)</Typography>
         <Typography>
-          Card processing fee (3%){estimated ? ' (estimated)' : ''}
+          {discountAmount > 0
+            ? `−${formatMoney(discountAmount, currency)}`
+            : formatMoney(0, currency)}
         </Typography>
-        <Typography>{formatMoney(surcharge, currency)}</Typography>
       </Stack>
       <Stack direction="row" justifyContent="space-between">
         <Typography fontWeight={600}>Total</Typography>

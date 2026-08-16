@@ -1,15 +1,15 @@
 import { Typography } from '@mui/material'
 import prisma from '@/app/utils/prisma'
 import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
-import { listCustomerInvoices } from '@/app/utils/billing'
+import { listCustomerSubscriptions } from '@/app/utils/billing'
 import { requireBillingPage } from '@/app/utils/billingSession'
-import { InvoiceList } from './components/InvoiceList'
+import { SubscriptionList } from '../components/SubscriptionList'
 import { PageProps } from '@/app/types/app'
 
-export default async function BillingPage({ searchParams }: PageProps) {
+export default async function SubscriptionsPage({ searchParams }: PageProps) {
   const { session, billedEmail, mismatch } = await requireBillingPage(
     searchParams,
-    '/account/billing'
+    '/account/billing/subscriptions'
   )
 
   if (mismatch) return null
@@ -17,17 +17,18 @@ export default async function BillingPage({ searchParams }: PageProps) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user?.email) {
     return (
-      <Typography>Add an email address to your account to view invoices.</Typography>
+      <Typography>
+        Add an email address to your account to view subscriptions.
+      </Typography>
     )
   }
 
   const customerId = await getOrCreateStripeCustomer(user)
-  const { drafts, open, history } = await listCustomerInvoices(customerId)
+  const { current, history } = await listCustomerSubscriptions(customerId)
 
   return (
-    <InvoiceList
-      drafts={drafts}
-      open={open}
+    <SubscriptionList
+      current={current}
       history={history}
       sessionEmail={user.email}
       billedEmail={billedEmail}

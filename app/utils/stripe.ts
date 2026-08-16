@@ -2,12 +2,9 @@ import Stripe from 'stripe'
 
 const secretKey = process.env.STRIPE_SECRET_KEY || 'api_key_placeholder'
 
-/**
- * Billing client. Preview API version is required for PaymentIntent surcharge fields.
- * Do not use this client for product checkout (landing page / domain).
- */
+/** Billing client. GA API version; invoices use confirmation_secret for Payment Element. */
 export const stripeBilling = new Stripe(secretKey, {
-  apiVersion: '2026-03-25.preview' as Stripe.LatestApiVersion,
+  apiVersion: '2026-07-29.dahlia',
 })
 
 /** Historical API version used by product checkout PaymentIntents. */

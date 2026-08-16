@@ -1,0 +1,3 @@
+kind: Changed
+body: 'Replace invoice card surcharges with dual pricing: list price is the card price, bank payments earn 2% off, and invoices pay through Stripe''s native confirmation secret'
+time: 2026-08-16T10:24:20.033941+08:00

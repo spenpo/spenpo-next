@@ -25,8 +25,10 @@ import redis from '@/app/utils/redis'
 import { JsonObject } from '@prisma/client/runtime/library'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
-import { markInvoicePaidFromPaymentIntent } from '@/app/utils/billing'
-import { sendInvoiceEventEmail } from '@/app/utils/billingEmails'
+import {
+  sendFirstPaymentMethodEmail,
+  sendInvoiceEventEmail,
+} from '@/app/utils/billingEmails'
 import { stripeProduct } from '@/app/utils/stripe'
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -59,18 +61,10 @@ export async function POST(req: NextRequest) {
 
   switch (event?.type) {
     case 'payment_intent.succeeded':
-      const paymentIntentSucceeded = event.data.object as Stripe.PaymentIntent
-      if (paymentIntentSucceeded.metadata?.stripeInvoiceId) {
-        try {
-          await markInvoicePaidFromPaymentIntent(paymentIntentSucceeded)
-        } catch (err: any) {
-          console.log('billing invoice pay error', err?.message || err)
-        }
-      } else {
-        console.log('payment intent succeeded')
-        console.log(paymentIntentSucceeded)
-      }
-
+      console.log(
+        'payment intent succeeded',
+        (event.data.object as Stripe.PaymentIntent).id
+      )
       break
     case 'invoice.created':
     case 'invoice.finalized':
@@ -89,6 +83,21 @@ export async function POST(req: NextRequest) {
     }
     case 'invoice.voided':
       console.log(event.type, (event.data.object as Stripe.Invoice).id)
+      break
+    case 'payment_method.attached': {
+      const method = event.data.object as Stripe.PaymentMethod
+      console.log(event.type, method.id)
+      try {
+        await sendFirstPaymentMethodEmail(method)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log('billing first-method email error', message)
+      }
+      break
+    }
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted':
+      console.log(event.type, (event.data.object as Stripe.Subscription).id)
       break
     case 'charge.succeeded':
       const CHARGE_SUCCEEDED = event.data.object

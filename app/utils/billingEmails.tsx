@@ -4,7 +4,14 @@ import { InvoicePaid } from '@/emails/InvoicePaid'
 import { InvoicePaymentFailed } from '@/emails/InvoicePaymentFailed'
 import { InvoiceReady } from '@/emails/InvoiceReady'
 import { InvoiceEmailProps } from '@/emails/components/InvoiceLayout'
-import { formatMoney, invoiceCustomerId } from '@/app/utils/billing'
+import { FirstPaymentMethodSaved } from '@/emails/FirstPaymentMethodSaved'
+import {
+  formatMoney,
+  invoiceCustomerId,
+  listCustomerPaymentMethods,
+  paymentMethodLabel,
+  serializePaymentMethod,
+} from '@/app/utils/billing'
 import { resend } from '@/app/utils/resend'
 import { stripeBilling } from '@/app/utils/stripe'
 
@@ -33,8 +40,10 @@ function billingFromAddress() {
   return process.env.BILLING_FROM_EMAIL || DEFAULT_FROM
 }
 
-function invoicePayUrl(invoiceId: string) {
-  return `${SITE_URL}/account/billing/${invoiceId}`
+function invoicePayUrl(invoiceId: string, email?: string | null) {
+  const url = new URL(`${SITE_URL}/account/billing/${invoiceId}`)
+  if (email) url.searchParams.set('email', email)
+  return url.toString()
 }
 
 function formatInvoiceDate(unix: number | null | undefined) {
@@ -96,8 +105,9 @@ export async function sendInvoiceEventEmail(
   const kind = EVENT_KIND[eventType]
   if (!kind) return
 
-  if (kind === 'ready' && invoice.status !== 'open') {
-    return
+  if (kind === 'ready') {
+    const heldDraft = invoice.status === 'draft' && invoice.auto_advance === false
+    if (invoice.status !== 'open' && !heldDraft) return
   }
 
   if (!process.env.RESEND_API_KEY) {
@@ -118,7 +128,10 @@ export async function sendInvoiceEventEmail(
     invoiceNumber,
     amount: formatMoney(amountCents, invoice.currency),
     dueDate: formatInvoiceDate(invoice.due_date),
-    invoiceUrl: invoicePayUrl(invoice.id),
+    invoiceUrl: invoicePayUrl(invoice.id, to),
+    billedEmail: to,
+    hostedInvoiceUrl:
+      kind === 'paid' ? null : invoice.hosted_invoice_url ?? null,
   }
 
   const { subject, react } = emailForKind(kind, props)
@@ -142,4 +155,60 @@ export async function sendInvoiceEventEmail(
   }
 
   console.log('billing invoice email sent', eventType, invoice.id, data?.id)
+}
+
+function notifyAddress() {
+  return process.env.BILLING_NOTIFY_EMAIL || 'spenpo@spenpo.com'
+}
+
+function stripeCustomerDashboardUrl(customerId: string, livemode: boolean) {
+  const base = livemode
+    ? 'https://dashboard.stripe.com'
+    : 'https://dashboard.stripe.com/test'
+  return `${base}/customers/${customerId}`
+}
+
+export async function sendFirstPaymentMethodEmail(method: Stripe.PaymentMethod) {
+  const customerId =
+    typeof method.customer === 'string' ? method.customer : method.customer?.id
+  if (!customerId) return
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log('billing first-method email skipped: RESEND_API_KEY is not set')
+    return
+  }
+
+  const methods = await listCustomerPaymentMethods(customerId)
+  if (methods.length !== 1) return
+
+  const customer = await stripeBilling.customers.retrieve(customerId)
+  if (customer.deleted) return
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: billingFromAddress(),
+      to: [notifyAddress()],
+      subject: `${customer.name || customer.email || customerId} saved a payment method`,
+      react: (
+        <FirstPaymentMethodSaved
+          customerName={customer.name ?? null}
+          customerEmail={customer.email ?? null}
+          methodLabel={paymentMethodLabel(serializePaymentMethod(method))}
+          dashboardUrl={stripeCustomerDashboardUrl(customerId, method.livemode)}
+        />
+      ),
+      tags: [
+        { name: 'customer_id', value: customerId },
+        { name: 'event', value: 'first-payment-method' },
+      ],
+    },
+    { idempotencyKey: `billing-first-pm/${customerId}` }
+  )
+
+  if (error) {
+    console.log('billing first-method email failed', customerId, error.message)
+    return
+  }
+
+  console.log('billing first-method email sent', customerId, data?.id)
 }

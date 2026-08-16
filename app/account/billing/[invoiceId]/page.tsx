@@ -1,4 +1,3 @@
-import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import {
   Button,
@@ -13,14 +12,17 @@ import {
   Typography,
 } from '@mui/material'
 import Link from 'next/link'
-import { authOptions } from '@/app/constants/api'
 import prisma from '@/app/utils/prisma'
 import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
-import { formatMoney, getOwnedInvoice, serializeInvoice } from '@/app/utils/billing'
+import { formatMoney, getInvoicePostPayState, getOwnedInvoice, serializeInvoice } from '@/app/utils/billing'
+import { withEmailQuery, firstSearchParam } from '@/app/utils/billingAuth'
+import { requireBillingPage } from '@/app/utils/billingSession'
 import { InvoicePayForm } from '../components/InvoicePayForm'
+import { PostPayActions } from '../components/PostPayActions'
 import { PageProps } from '@/app/types/app'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
+  draft: 'info',
   open: 'warning',
   paid: 'success',
   void: 'default',
@@ -31,24 +33,30 @@ export default async function InvoiceDetailPage({
   params,
   searchParams,
 }: PageProps) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    redirect(`/auth/signin?redirect=/account/billing/${params.invoiceId}`)
-  }
+  const { session, billedEmail, mismatch } = await requireBillingPage(
+    searchParams,
+    `/account/billing/${params.invoiceId}`
+  )
+  if (mismatch) return null
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user?.email) {
-    redirect('/account/billing')
+    redirect(withEmailQuery('/account/billing', billedEmail))
   }
 
   const customerId = await getOrCreateStripeCustomer(user)
   const invoice = await getOwnedInvoice(customerId, params.invoiceId)
   if (!invoice) {
-    redirect('/account/billing')
+    redirect(withEmailQuery('/account/billing', billedEmail))
   }
 
   const serialized = serializeInvoice(invoice)
-  const paymentComplete = searchParams.payment === 'complete'
+  const paymentComplete = firstSearchParam(searchParams.payment) === 'complete'
+  const paymentIntentId = firstSearchParam(searchParams.payment_intent)
+  const postPay =
+    paymentComplete && serialized.status === 'paid'
+      ? await getInvoicePostPayState(customerId, invoice, paymentIntentId)
+      : null
 
   return (
     <Stack gap={3}>
@@ -109,6 +117,20 @@ export default async function InvoiceDetailPage({
             </TableRow>
           ))}
           <TableRow>
+            <TableCell>Subtotal</TableCell>
+            <TableCell align="right">
+              {formatMoney(serialized.subtotal, serialized.currency)}
+            </TableCell>
+          </TableRow>
+          {serialized.discountAmount > 0 && (
+            <TableRow>
+              <TableCell>Bank discount (2%)</TableCell>
+              <TableCell align="right">
+                −{formatMoney(serialized.discountAmount, serialized.currency)}
+              </TableCell>
+            </TableRow>
+          )}
+          <TableRow>
             <TableCell>
               <Typography fontWeight={600}>Amount due</Typography>
             </TableCell>
@@ -120,10 +142,16 @@ export default async function InvoiceDetailPage({
           </TableRow>
         </TableBody>
       </Table>
-      {paymentComplete && serialized.status === 'paid' && (
-        <Typography color="success.main">Payment received. Thank you.</Typography>
-      )}
+      {postPay && <PostPayActions initial={postPay} />}
       {serialized.status === 'open' && serialized.amountDue > 0 && (
+        <>
+          <Typography variant="body2" color="text.secondary">
+            This invoice was finalized at the rate in effect when it was issued.
+          </Typography>
+          <InvoicePayForm invoice={serialized} />
+        </>
+      )}
+      {serialized.status === 'draft' && serialized.subtotal > 0 && (
         <InvoicePayForm invoice={serialized} />
       )}
     </Stack>

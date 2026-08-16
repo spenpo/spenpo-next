@@ -1,5 +1,5 @@
 'use client'
-import React, { FormEvent, useEffect, useMemo, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import {
   Elements,
@@ -9,7 +9,7 @@ import {
 } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { useRouter } from 'next/navigation'
-import { estimateInvoiceSurcharge, SerializedInvoice } from '@/app/utils/billing'
+import { bankAmount, formatMoney, SerializedInvoice } from '@/app/utils/billing'
 import { PriceBreakdown } from './PriceBreakdown'
 
 const stripePromise = loadStripe(
@@ -20,19 +20,8 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
-  const [paymentMethodType, setPaymentMethodType] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-
-  const quote = useMemo(
-    () => estimateInvoiceSurcharge(invoice.amountDue, paymentMethodType),
-    [invoice.amountDue, paymentMethodType]
-  )
-
-  useEffect(() => {
-    if (!elements) return
-    elements.update({ amount: quote.total })
-  }, [elements, quote.total])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -41,74 +30,29 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
     setIsLoading(true)
     setMessage(null)
 
-    const { error: submitError } = await elements.submit()
-    if (submitError) {
-      setMessage(submitError.message ?? 'Check the payment form and try again.')
-      setIsLoading(false)
-      return
-    }
-
-    const { error: tokenError, confirmationToken } =
-      await stripe.createConfirmationToken({
-        elements,
-        params: {
-          return_url: `${window.location.origin}/account/billing/${invoice.id}?payment=complete`,
-        },
-      })
-
-    if (tokenError || !confirmationToken) {
-      setMessage(tokenError?.message ?? 'Unable to create a confirmation token.')
-      setIsLoading(false)
-      return
-    }
-
-    const response = await fetch(`/api/billing/invoices/${invoice.id}/pay`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        confirmationTokenId: confirmationToken.id,
-        returnUrl: `${window.location.origin}/account/billing/${invoice.id}?payment=complete`,
-      }),
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/account/billing/${invoice.id}?payment=complete`,
+      },
+      redirect: 'if_required',
     })
-    const result = await response.json()
 
-    if (!response.ok) {
-      setMessage(result.error ?? 'Payment failed.')
+    if (error) {
+      setMessage(error.message ?? 'Payment failed.')
       setIsLoading(false)
       return
     }
 
-    if (result.status === 'requires_action' && result.clientSecret) {
-      const { error: actionError, paymentIntent } = await stripe.handleNextAction({
-        clientSecret: result.clientSecret,
-      })
-      if (actionError) {
-        setMessage(actionError.message ?? 'Additional authentication failed.')
-        setIsLoading(false)
-        return
-      }
-      if (paymentIntent?.status === 'succeeded') {
-        router.push(`/account/billing/${invoice.id}?payment=complete`)
-        router.refresh()
-        return
-      }
-      if (paymentIntent?.status === 'processing') {
-        setMessage(
-          'Payment submitted. Bank transfers can take a few days to complete.'
-        )
-        setIsLoading(false)
-        router.refresh()
-        return
-      }
-    }
-
-    if (result.status === 'succeeded') {
-      router.push(`/account/billing/${invoice.id}?payment=complete`)
+    if (paymentIntent?.status === 'succeeded') {
+      router.push(
+        `/account/billing/${invoice.id}?payment=complete&payment_intent=${paymentIntent.id}`
+      )
       router.refresh()
       return
     }
 
-    if (result.status === 'processing') {
+    if (paymentIntent?.status === 'processing') {
       setMessage(
         'Payment submitted. Bank transfers can take a few days to complete.'
       )
@@ -121,19 +65,19 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
 
   return (
     <Stack component="form" onSubmit={handleSubmit} gap={2}>
-      <PaymentElement onChange={(event) => setPaymentMethodType(event.value.type)} />
+      <PaymentElement />
       <PriceBreakdown
-        amountDue={invoice.amountDue}
-        surcharge={quote.surcharge}
-        total={quote.total}
+        subtotal={invoice.subtotal}
+        discountAmount={invoice.discountAmount}
+        total={invoice.amountDue}
         currency={invoice.currency}
-        estimated={quote.estimated}
       />
-      <Typography variant="body2" color="text.secondary">
-        Credit cards include a 3% processing fee. Debit cards and bank payments are
-        charged the invoice amount. You can choose a different method after seeing
-        the total.
-      </Typography>
+      {invoice.discountAmount === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          This invoice was issued at the card price. Bank payments save 2% on the
+          next invoice.
+        </Typography>
+      )}
       <Button type="submit" variant="contained" disabled={!stripe || isLoading}>
         {isLoading ? '...processing' : 'Pay invoice'}
       </Button>
@@ -142,17 +86,129 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
   )
 }
 
-export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
-  const options = {
-    mode: 'payment' as const,
-    amount: Math.max(invoice.amountDue, 50),
-    currency: invoice.currency,
-    appearance: { theme: 'stripe' as const },
+function DraftPriceChoice({
+  invoice,
+  onReady,
+}: {
+  invoice: SerializedInvoice
+  onReady: (clientSecret: string, nextInvoice: SerializedInvoice) => void
+}) {
+  const [message, setMessage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<'card' | 'us_bank_account' | null>(null)
+  const cardTotal = invoice.subtotal
+  const bankTotal = bankAmount(invoice.subtotal)
+
+  const choose = async (paymentMethodType: 'card' | 'us_bank_account') => {
+    setIsLoading(paymentMethodType)
+    setMessage(null)
+    const response = await fetch(`/api/billing/invoices/${invoice.id}/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentMethodType }),
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      setMessage(result.error ?? 'Unable to start payment.')
+      setIsLoading(null)
+      return
+    }
+    onReady(result.clientSecret, result.invoice)
   }
 
   return (
-    <Elements stripe={stripePromise} options={options}>
-      <PayForm invoice={invoice} />
+    <Stack gap={2}>
+      <Typography>
+        This invoice is ready to pay — {formatMoney(cardTotal, invoice.currency)} by
+        card, or {formatMoney(bankTotal, invoice.currency)} by bank. Choose a method
+        to lock in that price, then complete payment.
+      </Typography>
+      <Stack direction="row" gap={2} flexWrap="wrap">
+        <Button
+          variant="contained"
+          disabled={!!isLoading}
+          onClick={() => choose('card')}
+        >
+          {isLoading === 'card'
+            ? '...preparing'
+            : `Pay ${formatMoney(cardTotal, invoice.currency)} by card`}
+        </Button>
+        <Button
+          variant="outlined"
+          disabled={!!isLoading}
+          onClick={() => choose('us_bank_account')}
+        >
+          {isLoading === 'us_bank_account'
+            ? '...preparing'
+            : `Pay ${formatMoney(bankTotal, invoice.currency)} by bank`}
+        </Button>
+      </Stack>
+      {message && <Box>{message}</Box>}
+    </Stack>
+  )
+}
+
+export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [payable, setPayable] = useState(invoice)
+  const [message, setMessage] = useState<string | null>(null)
+  const [loadingSecret, setLoadingSecret] = useState(invoice.status === 'open')
+
+  useEffect(() => {
+    if (invoice.status !== 'open') return
+
+    let cancelled = false
+    const load = async () => {
+      const response = await fetch(`/api/billing/invoices/${invoice.id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const result = await response.json()
+      if (cancelled) return
+      if (!response.ok) {
+        setMessage(result.error ?? 'Unable to start payment.')
+        setLoadingSecret(false)
+        return
+      }
+      setPayable(result.invoice)
+      setClientSecret(result.clientSecret)
+      setLoadingSecret(false)
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [invoice.id, invoice.status])
+
+  if (invoice.status === 'draft' && !clientSecret) {
+    return (
+      <DraftPriceChoice
+        invoice={invoice}
+        onReady={(secret, nextInvoice) => {
+          setPayable(nextInvoice)
+          setClientSecret(secret)
+        }}
+      />
+    )
+  }
+
+  if (loadingSecret) {
+    return <Typography>Preparing payment...</Typography>
+  }
+
+  if (!clientSecret) {
+    return message ? <Box>{message}</Box> : null
+  }
+
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        clientSecret,
+        appearance: { theme: 'stripe' },
+      }}
+    >
+      <PayForm invoice={payable} />
     </Elements>
   )
 }

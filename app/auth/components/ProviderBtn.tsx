@@ -3,9 +3,8 @@
 import { Button, Typography } from '@mui/material'
 import React from 'react'
 import Image from 'next/image'
-import { ClientSafeProvider, LiteralUnion, signIn } from 'next-auth/react'
+import { LiteralUnion, signIn } from 'next-auth/react'
 import { BuiltInProviderType } from 'next-auth/providers/index'
-import { useGetQuery } from '@/app/hooks/useGetQuery'
 
 const PROVIDER_COLORS: Partial<
   Record<LiteralUnion<BuiltInProviderType, string>, string>
@@ -15,17 +14,18 @@ const PROVIDER_COLORS: Partial<
   facebook: '#1877f2',
 }
 
-export const ProviderBtn: React.FC<
-  ClientSafeProvider & { redirectPath: string }
-> = ({ redirectPath, id, name }) => {
-  const query = useGetQuery()
+export const ProviderBtn: React.FC<{
+  id: string
+  name: string
+  callbackUrl: string
+}> = ({ callbackUrl, id, name }) => {
   return (
     <Button
       key={id}
       variant="outlined"
       onClick={() =>
         signIn(id, {
-          callbackUrl: redirectPath + query,
+          callbackUrl,
         })
       }
       sx={{
@@ -33,6 +33,7 @@ export const ProviderBtn: React.FC<
         textTransform: 'none',
         borderColor: PROVIDER_COLORS[id],
         color: PROVIDER_COLORS[id],
+        width: '100%',
       }}
     >
       <Image

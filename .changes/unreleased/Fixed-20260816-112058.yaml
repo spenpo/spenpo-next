@@ -1,0 +1,3 @@
+kind: Fixed
+body: Billing sign-in honors the invoice return URL, prefills the billed email, warns on the wrong account, and rematches empty Stripe customers
+time: 2026-08-16T11:20:58.327319+08:00

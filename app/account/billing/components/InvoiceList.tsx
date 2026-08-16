@@ -11,13 +11,25 @@ import {
   Typography,
 } from '@mui/material'
 import Link from 'next/link'
-import { formatMoney, SerializedInvoice } from '@/app/utils/billing'
+import { bankAmount, formatMoney, SerializedInvoice } from '@/app/utils/billing'
+import { emailsMatch } from '@/app/utils/billingAuth'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
+  draft: 'info',
   open: 'warning',
   paid: 'success',
   void: 'default',
   uncollectible: 'error',
+}
+
+function amountCell(invoice: SerializedInvoice) {
+  if (invoice.status === 'draft') {
+    return `${formatMoney(invoice.subtotal, invoice.currency)} card / ${formatMoney(
+      bankAmount(invoice.subtotal),
+      invoice.currency
+    )} bank`
+  }
+  return formatMoney(invoice.amountDue, invoice.currency)
 }
 
 function InvoiceTable({
@@ -57,7 +69,8 @@ function InvoiceTable({
                 href={`/account/billing/${invoice.id}`}
                 sx={{ textTransform: 'none', px: 0 }}
               >
-                {invoice.number || invoice.id}
+                {invoice.number ||
+                  (invoice.status === 'draft' ? 'Draft' : invoice.id)}
               </Button>
             </TableCell>
             <TableCell>
@@ -70,20 +83,20 @@ function InvoiceTable({
                 color={STATUS_COLOR[invoice.status ?? ''] ?? 'default'}
               />
             </TableCell>
+            <TableCell align="right">{amountCell(invoice)}</TableCell>
             <TableCell align="right">
-              {formatMoney(invoice.amountDue, invoice.currency)}
-            </TableCell>
-            <TableCell align="right">
-              {showPay && invoice.status === 'open' && invoice.amountDue > 0 && (
-                <Button
-                  component={Link}
-                  href={`/account/billing/${invoice.id}`}
-                  variant="contained"
-                  size="small"
-                >
-                  Pay
-                </Button>
-              )}
+              {showPay &&
+                (invoice.status === 'open' || invoice.status === 'draft') &&
+                invoice.subtotal > 0 && (
+                  <Button
+                    component={Link}
+                    href={`/account/billing/${invoice.id}`}
+                    variant="contained"
+                    size="small"
+                  >
+                    Pay
+                  </Button>
+                )}
             </TableCell>
           </TableRow>
         ))}
@@ -93,14 +106,49 @@ function InvoiceTable({
 }
 
 export function InvoiceList({
+  drafts,
   open,
   history,
+  sessionEmail,
+  billedEmail,
 }: {
+  drafts: SerializedInvoice[]
   open: SerializedInvoice[]
   history: SerializedInvoice[]
+  sessionEmail?: string
+  billedEmail?: string | null
 }) {
+  if (drafts.length === 0 && open.length === 0 && history.length === 0) {
+    return (
+      <Stack gap={1}>
+        <Typography color="text.secondary">
+          {sessionEmail
+            ? `No invoices for ${sessionEmail}.`
+            : 'You have no invoices.'}
+        </Typography>
+        {sessionEmail &&
+          billedEmail &&
+          !emailsMatch(sessionEmail, billedEmail) && (
+            <Typography color="text.secondary">
+              Invoices were sent to {billedEmail}. Sign in as that address to view
+              them.
+            </Typography>
+          )}
+      </Stack>
+    )
+  }
   return (
     <Stack gap={4}>
+      {drafts.length > 0 && (
+        <Stack gap={1}>
+          <Typography variant="h6">Ready to pay</Typography>
+          <InvoiceTable
+            invoices={drafts}
+            emptyLabel="No invoices waiting on a payment method."
+            showPay
+          />
+        </Stack>
+      )}
       <Stack gap={1}>
         <Typography variant="h6">Open</Typography>
         <InvoiceTable

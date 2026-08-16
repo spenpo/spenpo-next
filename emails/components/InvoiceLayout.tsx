@@ -19,6 +19,8 @@ export type InvoiceEmailProps = {
   amount: string
   dueDate: string | null
   invoiceUrl: string
+  billedEmail?: string | null
+  hostedInvoiceUrl?: string | null
 }
 
 type InvoiceLayoutProps = InvoiceEmailProps & {
@@ -86,6 +88,8 @@ export function InvoiceLayout({
   showDueDate = true,
   invoiceUrl,
   actionLabel,
+  billedEmail,
+  hostedInvoiceUrl,
 }: InvoiceLayoutProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi,'
 
@@ -103,6 +107,9 @@ export function InvoiceLayout({
           </Heading>
           <Text style={paragraph}>{greeting}</Text>
           <Text style={paragraph}>{intro}</Text>
+          {billedEmail ? (
+            <Text style={paragraph}>Sign in as {billedEmail} to view this invoice.</Text>
+          ) : null}
           <Section style={{ margin: '8px 0 24px' }}>
             <Text style={detail}>Invoice: {invoiceNumber}</Text>
             <Text style={detail}>
@@ -115,6 +122,13 @@ export function InvoiceLayout({
           <Button href={invoiceUrl} style={button}>
             {actionLabel}
           </Button>
+          {hostedInvoiceUrl ? (
+            <Text style={{ ...paragraph, marginTop: '16px', marginBottom: 0 }}>
+              <Link href={hostedInvoiceUrl} style={{ color: '#111827' }}>
+                Pay without signing in
+              </Link>
+            </Text>
+          ) : null}
           <Hr
             style={{
               borderColor: '#e4e4e7',

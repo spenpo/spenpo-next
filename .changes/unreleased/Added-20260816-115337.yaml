@@ -1,0 +1,3 @@
+kind: Added
+body: Notify when a customer saves their first payment method, and after an in-app invoice payment offer to save the method, turn on autopay, or switch to bank
+time: 2026-08-16T11:53:37.741268+08:00
