@@ -3,7 +3,6 @@ import React, { FormEvent, useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
-  Button,
   Chip,
   Stack,
   Table,
@@ -13,6 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
+import LoadingButton from '@mui/lab/LoadingButton'
 import {
   Elements,
   PaymentElement,
@@ -21,6 +21,7 @@ import {
 } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { paymentMethodLabel, SerializedPaymentMethod } from '@/app/utils/billing'
+import { BillingListSkeleton } from './BillingListSkeleton'
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
@@ -68,9 +69,14 @@ function AddPaymentMethodForm({
   return (
     <Stack component="form" onSubmit={handleSubmit} gap={2}>
       <PaymentElement />
-      <Button type="submit" variant="contained" disabled={!stripe || isLoading}>
-        {isLoading ? '...saving' : 'Save payment method'}
-      </Button>
+      <LoadingButton
+        type="submit"
+        variant="contained"
+        loading={isLoading}
+        disabled={!stripe || isLoading}
+      >
+        Save payment method
+      </LoadingButton>
       {message && <Box>{message}</Box>}
     </Stack>
   )
@@ -89,6 +95,9 @@ export function PaymentMethodsManager({
   const [bankPromptId, setBankPromptId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pending, setPending] = useState<
+    { type: 'add' } | { type: 'default' | 'remove'; id: string } | null
+  >(null)
 
   const applyMethods = useCallback(
     async (
@@ -176,8 +185,11 @@ export function PaymentMethodsManager({
   }, [loadMethods, setupIntentClientSecret])
 
   const startAdd = async () => {
+    setPending({ type: 'add' })
+    setMessage(null)
     const response = await fetch('/api/billing/setup-intent', { method: 'POST' })
     const data = await response.json()
+    setPending(null)
     if (!response.ok) {
       setMessage(data.error ?? 'Unable to start adding a payment method.')
       return
@@ -186,6 +198,8 @@ export function PaymentMethodsManager({
   }
 
   const setDefault = async (paymentMethodId: string) => {
+    setPending({ type: 'default', id: paymentMethodId })
+    setMessage(null)
     const response = await fetch('/api/billing/payment-methods', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -193,35 +207,45 @@ export function PaymentMethodsManager({
     })
     if (!response.ok) {
       setMessage('Unable to update the default payment method.')
+      setPending(null)
       return
     }
     setBankPromptId(null)
     await loadMethods()
+    setPending(null)
   }
 
   const remove = async (paymentMethodId: string) => {
+    setPending({ type: 'remove', id: paymentMethodId })
+    setMessage(null)
     const response = await fetch(
       `/api/billing/payment-methods?id=${paymentMethodId}`,
       { method: 'DELETE' }
     )
     if (!response.ok) {
       setMessage('Unable to remove this payment method.')
+      setPending(null)
       return
     }
     setBankPromptId(null)
     await loadMethods()
+    setPending(null)
   }
 
   if (loading) {
-    return <Typography>Loading payment methods...</Typography>
+    return <BillingListSkeleton />
   }
 
   const bankPrompt = methods.find((method) => method.id === bankPromptId)
+  const busy = Boolean(pending)
 
   return (
     <Stack gap={3}>
       {methods.length === 0 ? (
-        <Typography color="text.secondary">No payment methods saved yet.</Typography>
+        <Typography color="text.secondary">
+          Save a bank account or card to pay invoices and turn on autopay. Bank
+          payments earn 2% off.
+        </Typography>
       ) : (
         <Table size="small">
           <TableHead>
@@ -242,19 +266,30 @@ export function PaymentMethodsManager({
                   {method.id === defaultPaymentMethodId ? (
                     <Chip size="small" color="success" label="Default" />
                   ) : (
-                    <Button size="small" onClick={() => setDefault(method.id)}>
+                    <LoadingButton
+                      size="small"
+                      loading={
+                        pending?.type === 'default' && pending.id === method.id
+                      }
+                      disabled={busy}
+                      onClick={() => setDefault(method.id)}
+                    >
                       Make default
-                    </Button>
+                    </LoadingButton>
                   )}
                 </TableCell>
                 <TableCell align="right">
-                  <Button
+                  <LoadingButton
                     size="small"
                     color="error"
+                    loading={
+                      pending?.type === 'remove' && pending.id === method.id
+                    }
+                    disabled={busy}
                     onClick={() => remove(method.id)}
                   >
                     Remove
-                  </Button>
+                  </LoadingButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -266,9 +301,15 @@ export function PaymentMethodsManager({
         <Alert
           severity="info"
           action={
-            <Button color="inherit" size="small" onClick={() => setDefault(bankPrompt.id)}>
+            <LoadingButton
+              color="inherit"
+              size="small"
+              loading={pending?.type === 'default' && pending.id === bankPrompt.id}
+              disabled={busy}
+              onClick={() => setDefault(bankPrompt.id)}
+            >
               Make default
-            </Button>
+            </LoadingButton>
           }
         >
           Make {paymentMethodLabel(bankPrompt)} your default to get 2% off the next
@@ -292,13 +333,15 @@ export function PaymentMethodsManager({
           />
         </Elements>
       ) : (
-        <Button
+        <LoadingButton
           variant="outlined"
+          loading={pending?.type === 'add'}
+          disabled={busy}
           onClick={startAdd}
           sx={{ alignSelf: 'flex-start' }}
         >
           Add payment method
-        </Button>
+        </LoadingButton>
       )}
       {message && <Box>{message}</Box>}
     </Stack>

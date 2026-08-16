@@ -10,15 +10,18 @@ import {
 import { firstSearchParam } from '@/app/utils/billingAuth'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { PaymentMethodsManager } from '../components/PaymentMethodsManager'
+import { BillingMismatchCard } from '../components/BillingMismatchCard'
 import { PageProps } from '@/app/types/app'
 
 export default async function PaymentMethodsPage({ searchParams }: PageProps) {
-  const { session, mismatch } = await requireBillingPage(
+  const { session, billedEmail, mismatch } = await requireBillingPage(
     searchParams,
     '/account/billing/payment-methods'
   )
 
-  if (mismatch) return null
+  if (mismatch) {
+    return <BillingMismatchCard billedEmail={billedEmail!} />
+  }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   const customerId = user?.email ? await getOrCreateStripeCustomer(user) : null

@@ -4,6 +4,7 @@ import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
 import { listCustomerInvoices } from '@/app/utils/billing'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { InvoiceList } from './components/InvoiceList'
+import { BillingMismatchCard } from './components/BillingMismatchCard'
 import { PageProps } from '@/app/types/app'
 
 export default async function BillingPage({ searchParams }: PageProps) {
@@ -12,12 +13,16 @@ export default async function BillingPage({ searchParams }: PageProps) {
     '/account/billing'
   )
 
-  if (mismatch) return null
+  if (mismatch) {
+    return <BillingMismatchCard billedEmail={billedEmail!} />
+  }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user?.email) {
     return (
-      <Typography>Add an email address to your account to view invoices.</Typography>
+      <Typography>
+        Add an email address to your account to view invoices.
+      </Typography>
     )
   }
 

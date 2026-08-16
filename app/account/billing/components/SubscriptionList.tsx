@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import { formatMoney, SerializedSubscription } from '@/app/utils/billing'
 import { emailsMatch } from '@/app/utils/billingAuth'
+import { subscriptionStatusLabel } from './statusLabels'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
   active: 'success',
@@ -80,11 +81,10 @@ function SubscriptionTable({
             <TableCell>
               <Chip
                 size="small"
-                label={
+                label={subscriptionStatusLabel(
+                  subscription.status,
                   subscription.cancelAtPeriodEnd
-                    ? 'cancels at period end'
-                    : subscription.status
-                }
+                )}
                 color={
                   subscription.cancelAtPeriodEnd
                     ? 'warning'
@@ -136,11 +136,9 @@ export function SubscriptionList({
 }) {
   if (current.length === 0 && history.length === 0) {
     return (
-      <Stack gap={1}>
+      <Stack gap={2} alignItems="flex-start">
         <Typography color="text.secondary">
-          {sessionEmail
-            ? `No subscriptions for ${sessionEmail}.`
-            : 'You have no subscriptions.'}
+          Recurring billing will show up here when a subscription is set up.
         </Typography>
         {sessionEmail &&
           billedEmail &&

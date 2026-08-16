@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import { bankAmount, formatMoney, SerializedInvoice } from '@/app/utils/billing'
 import { emailsMatch } from '@/app/utils/billingAuth'
+import { invoiceStatusLabel } from './statusLabels'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
   draft: 'info',
@@ -70,7 +71,7 @@ function InvoiceTable({
                 sx={{ textTransform: 'none', px: 0 }}
               >
                 {invoice.number ||
-                  (invoice.status === 'draft' ? 'Draft' : invoice.id)}
+                  (invoice.status === 'draft' ? 'Ready to pay' : invoice.id)}
               </Button>
             </TableCell>
             <TableCell>
@@ -79,7 +80,7 @@ function InvoiceTable({
             <TableCell>
               <Chip
                 size="small"
-                label={invoice.status ?? 'unknown'}
+                label={invoiceStatusLabel(invoice.status)}
                 color={STATUS_COLOR[invoice.status ?? ''] ?? 'default'}
               />
             </TableCell>

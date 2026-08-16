@@ -26,6 +26,7 @@ import {
   subscriptionListAmount,
 } from '@/app/utils/billing'
 import { DualPriceCopy } from './DualPriceCopy'
+import { subscriptionStatusLabel } from './statusLabels'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
   active: 'success',
@@ -161,11 +162,10 @@ export function SubscriptionManager({
         </Typography>
         <Chip
           size="small"
-          label={
+          label={subscriptionStatusLabel(
+            subscription.status,
             subscription.cancelAtPeriodEnd
-              ? 'cancels at period end'
-              : subscription.status
-          }
+          )}
           color={
             subscription.cancelAtPeriodEnd
               ? 'warning'

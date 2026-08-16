@@ -19,6 +19,8 @@ import { withEmailQuery, firstSearchParam } from '@/app/utils/billingAuth'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { InvoicePayForm } from '../components/InvoicePayForm'
 import { PostPayActions } from '../components/PostPayActions'
+import { BillingMismatchCard } from '../components/BillingMismatchCard'
+import { invoiceStatusLabel } from '../components/statusLabels'
 import { PageProps } from '@/app/types/app'
 
 const STATUS_COLOR: Record<string, ChipProps['color']> = {
@@ -37,7 +39,9 @@ export default async function InvoiceDetailPage({
     searchParams,
     `/account/billing/${params.invoiceId}`
   )
-  if (mismatch) return null
+  if (mismatch) {
+    return <BillingMismatchCard billedEmail={billedEmail!} />
+  }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user?.email) {
@@ -71,7 +75,7 @@ export default async function InvoiceDetailPage({
         <Typography variant="h5">{serialized.number || serialized.id}</Typography>
         <Chip
           size="small"
-          label={serialized.status ?? 'unknown'}
+          label={invoiceStatusLabel(serialized.status)}
           color={STATUS_COLOR[serialized.status ?? ''] ?? 'default'}
         />
       </Stack>
@@ -86,7 +90,7 @@ export default async function InvoiceDetailPage({
             rel="noreferrer"
             variant="outlined"
           >
-            View hosted invoice
+            View invoice
           </Button>
         )}
         {serialized.invoicePdf && (
