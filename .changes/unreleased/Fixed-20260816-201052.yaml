@@ -1,0 +1,3 @@
+kind: Fixed
+body: Invoice payment keeps the issued total and no longer asks card vs bank, which had been stripping the 2% bank discount
+time: 2026-08-16T20:10:52.438611+08:00

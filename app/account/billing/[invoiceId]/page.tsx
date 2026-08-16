@@ -147,16 +147,15 @@ export default async function InvoiceDetailPage({
         </TableBody>
       </Table>
       {postPay && <PostPayActions initial={postPay} />}
-      {serialized.status === 'open' && serialized.amountDue > 0 && (
+      {((serialized.status === 'open' && serialized.amountDue > 0) ||
+        (serialized.status === 'draft' && serialized.subtotal > 0)) && (
         <>
           <Typography variant="body2" color="text.secondary">
-            This invoice was finalized at the rate in effect when it was issued.
+            This total is based on your default payment method when the invoice was
+            issued. Changing it applies to the next invoice.
           </Typography>
           <InvoicePayForm invoice={serialized} />
         </>
-      )}
-      {serialized.status === 'draft' && serialized.subtotal > 0 && (
-        <InvoicePayForm invoice={serialized} />
       )}
     </Stack>
   )

@@ -1,5 +1,5 @@
 'use client'
-import React, { FormEvent, useCallback, useEffect, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import {
   Elements,
@@ -9,7 +9,7 @@ import {
 } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { useRouter } from 'next/navigation'
-import { bankAmount, formatMoney, SerializedInvoice } from '@/app/utils/billing'
+import { SerializedInvoice } from '@/app/utils/billing'
 import { PriceBreakdown } from './PriceBreakdown'
 
 const stripePromise = loadStripe(
@@ -86,100 +86,21 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
   )
 }
 
-type PayReady = {
-  clientSecret: string
-  customerSessionClientSecret: string | null
-  invoice: SerializedInvoice
-}
-
-function DraftPriceChoice({
-  invoice,
-  onReady,
-}: {
-  invoice: SerializedInvoice
-  onReady: (ready: PayReady) => void
-}) {
-  const [message, setMessage] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState<'card' | 'us_bank_account' | null>(null)
-  const cardTotal = invoice.subtotal
-  const bankTotal = bankAmount(invoice.subtotal)
-
-  const choose = async (paymentMethodType: 'card' | 'us_bank_account') => {
-    setIsLoading(paymentMethodType)
-    setMessage(null)
-    const response = await fetch(`/api/billing/invoices/${invoice.id}/pay`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentMethodType }),
-    })
-    const result = await response.json()
-    if (!response.ok) {
-      setMessage(result.error ?? 'Unable to start payment.')
-      setIsLoading(null)
-      return
-    }
-    onReady({
-      clientSecret: result.clientSecret,
-      customerSessionClientSecret: result.customerSessionClientSecret ?? null,
-      invoice: result.invoice,
-    })
-  }
-
-  return (
-    <Stack gap={2}>
-      <Typography>
-        This invoice is ready to pay — {formatMoney(cardTotal, invoice.currency)} by
-        card, or {formatMoney(bankTotal, invoice.currency)} by bank. Choose a method
-        to lock in that price, then complete payment.
-      </Typography>
-      <Stack direction="row" gap={2} flexWrap="wrap">
-        <Button
-          variant="contained"
-          disabled={!!isLoading}
-          onClick={() => choose('card')}
-        >
-          {isLoading === 'card'
-            ? '...preparing'
-            : `Pay ${formatMoney(cardTotal, invoice.currency)} by card`}
-        </Button>
-        <Button
-          variant="outlined"
-          disabled={!!isLoading}
-          onClick={() => choose('us_bank_account')}
-        >
-          {isLoading === 'us_bank_account'
-            ? '...preparing'
-            : `Pay ${formatMoney(bankTotal, invoice.currency)} by bank`}
-        </Button>
-      </Stack>
-      {message && <Box>{message}</Box>}
-    </Stack>
-  )
-}
-
 export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [customerSessionClientSecret, setCustomerSessionClientSecret] =
     useState<string | null>(null)
   const [payable, setPayable] = useState(invoice)
   const [message, setMessage] = useState<string | null>(null)
-  const [loadingSecret, setLoadingSecret] = useState(invoice.status === 'open')
-
-  const applyReady = useCallback((ready: PayReady) => {
-    setPayable(ready.invoice)
-    setClientSecret(ready.clientSecret)
-    setCustomerSessionClientSecret(ready.customerSessionClientSecret)
-  }, [])
+  const [loadingSecret, setLoadingSecret] = useState(true)
 
   useEffect(() => {
-    if (invoice.status !== 'open') return
+    if (invoice.status !== 'open' && invoice.status !== 'draft') return
 
     let cancelled = false
     const load = async () => {
       const response = await fetch(`/api/billing/invoices/${invoice.id}/pay`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
       })
       const result = await response.json()
       if (cancelled) return
@@ -188,22 +109,16 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
         setLoadingSecret(false)
         return
       }
-      applyReady({
-        clientSecret: result.clientSecret,
-        customerSessionClientSecret: result.customerSessionClientSecret ?? null,
-        invoice: result.invoice,
-      })
+      setPayable(result.invoice)
+      setClientSecret(result.clientSecret)
+      setCustomerSessionClientSecret(result.customerSessionClientSecret ?? null)
       setLoadingSecret(false)
     }
     load()
     return () => {
       cancelled = true
     }
-  }, [applyReady, invoice.id, invoice.status])
-
-  if (invoice.status === 'draft' && !clientSecret) {
-    return <DraftPriceChoice invoice={invoice} onReady={applyReady} />
-  }
+  }, [invoice.id, invoice.status])
 
   if (loadingSecret) {
     return <Typography>Preparing payment...</Typography>

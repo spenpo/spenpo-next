@@ -503,10 +503,7 @@ async function paymentElementCustomerSessionSecret(customerId: string) {
   }
 }
 
-export async function prepareInvoicePayment(
-  invoice: Stripe.Invoice,
-  paymentMethodType?: 'card' | 'us_bank_account'
-) {
+export async function prepareInvoicePayment(invoice: Stripe.Invoice) {
   const customerId = invoiceCustomerId(invoice)
   if (!customerId) {
     return { error: 'This invoice cannot be paid', status: 409 as const }
@@ -517,7 +514,6 @@ export async function prepareInvoicePayment(
 
   if (current.status === 'draft') {
     await stripeBilling.invoices.update(current.id, {
-      discounts: await discountsForPaymentMethodType(paymentMethodType),
       auto_advance: false,
     })
 
