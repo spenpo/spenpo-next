@@ -1,12 +1,13 @@
 import { getProviders } from 'next-auth/react'
 import { getServerSession } from 'next-auth/next'
-import { Stack, Typography, Divider } from '@mui/material'
+import { Divider, Typography } from '@mui/material'
 import React from 'react'
 import { PageProps } from '@/app/types/app'
 import { redirect } from 'next/navigation'
 import { ProviderBtn } from '../components/ProviderBtn'
 import { EmailSignInForm } from '../components/EmailSignInForm'
 import { MoreSignInOptions } from '../components/MoreSignInOptions'
+import { AuthCard } from '../components/AuthCard'
 import { authOptions } from '@/app/constants/api'
 import { firstSearchParam, signInCallbackUrl } from '@/app/utils/billingAuth'
 
@@ -14,29 +15,48 @@ export default async function Signin({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions)
   const callbackUrl = signInCallbackUrl(searchParams)
   const billedEmail = firstSearchParam(searchParams.email)
+  const redirectTo = firstSearchParam(searchParams.redirect)
+  const redisId = firstSearchParam(searchParams.redisId)
 
   if (session) redirect(callbackUrl)
 
   const providers = await getProviders()
   const google = providers?.google
   const github = providers?.github
+  const invoiceContext = Boolean(billedEmail)
 
   return (
-    <Stack gap={2} m="auto" textAlign="center" maxWidth="22em" width="100%">
-      <Typography variant="h5">Welcome</Typography>
-      {billedEmail && (
-        <Typography color="text.secondary">
-          Sign in as {billedEmail} to view this invoice.
-        </Typography>
-      )}
-      <Divider flexItem />
-      <EmailSignInForm callbackUrl={callbackUrl} defaultEmail={billedEmail} />
+    <AuthCard>
+      <Typography variant="h4" component="h1">
+        {invoiceContext ? 'Open your invoice' : 'Join your billing account'}
+      </Typography>
+      <Typography color="text.secondary">
+        {invoiceContext
+          ? `Use ${billedEmail} so we can show the invoice we sent you. We'll email you a link — no password.`
+          : "Pay invoices and set up autopay. We'll email you a link — no password to remember."}
+      </Typography>
+      <EmailSignInForm
+        callbackUrl={callbackUrl}
+        defaultEmail={billedEmail}
+        redirect={redirectTo}
+        redisId={redisId}
+        billedEmail={billedEmail}
+        invoiceContext={invoiceContext}
+      />
       {google && (
-        <ProviderBtn
-          id={google.id}
-          name={google.name}
-          callbackUrl={callbackUrl}
-        />
+        <>
+          <Divider flexItem>or</Divider>
+          <ProviderBtn
+            id={google.id}
+            name={google.name}
+            callbackUrl={callbackUrl}
+          />
+          {invoiceContext && (
+            <Typography variant="body2" color="text.secondary">
+              Only use Google if that account is {billedEmail}.
+            </Typography>
+          )}
+        </>
       )}
       {github && (
         <MoreSignInOptions>
@@ -47,6 +67,6 @@ export default async function Signin({ searchParams }: PageProps) {
           />
         </MoreSignInOptions>
       )}
-    </Stack>
+    </AuthCard>
   )
 }

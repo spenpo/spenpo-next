@@ -4,13 +4,22 @@ import { Box, Button, Stack, TextField, Typography } from '@mui/material'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
+import { authVerifyRequestHref } from '@/app/utils/billingAuth'
 
 export function EmailSignInForm({
   callbackUrl,
   defaultEmail,
+  redirect,
+  redisId,
+  billedEmail,
+  invoiceContext,
 }: {
   callbackUrl: string
   defaultEmail?: string
+  redirect?: string
+  redisId?: string
+  billedEmail?: string
+  invoiceContext?: boolean
 }) {
   const router = useRouter()
   const [email, setEmail] = useState(defaultEmail ?? '')
@@ -34,11 +43,18 @@ export function EmailSignInForm({
       return
     }
 
-    router.push(`/auth/verify-request?email=${encodeURIComponent(email)}`)
+    router.push(
+      authVerifyRequestHref({
+        email,
+        redirect,
+        redisId,
+        billedEmail,
+      })
+    )
   }
 
   return (
-    <Stack component="form" onSubmit={handleSubmit} gap={1.5} width="100%">
+    <Stack component="form" onSubmit={handleSubmit} gap={2} width="100%">
       <TextField
         type="email"
         name="email"
@@ -47,11 +63,14 @@ export function EmailSignInForm({
         onChange={(event) => setEmail(event.target.value)}
         required
         autoComplete="email"
-        size="small"
         fullWidth
       />
-      <Button type="submit" variant="contained" disabled={loading || !email}>
-        {loading ? 'Sending link...' : 'Email me a sign-in link'}
+      <Button type="submit" variant="contained" size="large" disabled={loading || !email}>
+        {loading
+          ? 'Sending link...'
+          : invoiceContext
+            ? 'Email me a link to this invoice'
+            : 'Email me a link'}
       </Button>
       {message && (
         <Box>

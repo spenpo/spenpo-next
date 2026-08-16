@@ -59,21 +59,20 @@ export function SignInMagicLink({ url, email }: SignInMagicLinkProps) {
     <Html lang="en">
       <Head />
       <Body style={body}>
-        <Preview>Sign in to Spenpo as {email}</Preview>
+        <Preview>Your Spenpo sign-in link for {email}</Preview>
         <Container style={container}>
           <Heading
             as="h1"
             style={{ color: '#18181b', fontSize: '24px', margin: '0 0 16px' }}
           >
-            Sign in to Spenpo
+            Your Spenpo sign-in link
           </Heading>
-          <Text style={paragraph}>Hi,</Text>
           <Text style={paragraph}>
-            Click the button below to sign in as {email}. This link expires in 24
-            hours and can only be used once.
+            Use this link to open your account as {email} so you can pay invoices or
+            set up autopay. It expires in 24 hours and can only be used once.
           </Text>
           <Button href={url} style={button}>
-            Sign in
+            Continue to your account
           </Button>
           <Text style={{ ...paragraph, marginTop: '24px' }}>
             If you did not request this, you can ignore this email.

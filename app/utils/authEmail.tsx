@@ -23,7 +23,7 @@ export async function sendAuthVerificationRequest({
   const { error } = await resend.emails.send({
     from: authFromAddress(),
     to: [identifier],
-    subject: 'Sign in to Spenpo',
+    subject: 'Your Spenpo sign-in link',
     react: <SignInMagicLink url={url} email={identifier} />,
   })
 

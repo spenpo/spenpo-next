@@ -120,11 +120,10 @@ export function InvoiceList({
 }) {
   if (drafts.length === 0 && open.length === 0 && history.length === 0) {
     return (
-      <Stack gap={1}>
+      <Stack gap={2} alignItems="flex-start">
         <Typography color="text.secondary">
-          {sessionEmail
-            ? `No invoices for ${sessionEmail}.`
-            : 'You have no invoices.'}
+          Invoices will show up here when we send them. You can add a bank or card
+          now to turn on autopay.
         </Typography>
         {sessionEmail &&
           billedEmail &&
@@ -134,6 +133,13 @@ export function InvoiceList({
               them.
             </Typography>
           )}
+        <Button
+          component={Link}
+          href="/account/billing/payment-methods"
+          variant="contained"
+        >
+          Set up autopay
+        </Button>
       </Stack>
     )
   }

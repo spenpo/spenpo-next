@@ -32,11 +32,49 @@ export function withEmailQuery(path: string, email?: string | null) {
   return pathAndSearch(url.pathname + url.search)
 }
 
+function withOptionalParams(
+  path: string,
+  params: Record<string, string | undefined | null>
+) {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value) search.set(key, value)
+  }
+  const query = search.toString()
+  return query ? `${path}?${query}` : path
+}
+
 export function billingSignInUrl(returnPath: string, email?: string | null) {
   const params = new URLSearchParams()
   params.set('redirect', returnPath)
   if (email) params.set('email', email)
   return `/auth/signin?${params.toString()}`
+}
+
+export function authSignInHref(params: {
+  redirect?: string | null
+  redisId?: string | null
+  email?: string | null
+}) {
+  return withOptionalParams('/auth/signin', {
+    redirect: params.redirect,
+    redisId: params.redisId,
+    email: params.email,
+  })
+}
+
+export function authVerifyRequestHref(params: {
+  email: string
+  redirect?: string | null
+  redisId?: string | null
+  billedEmail?: string | null
+}) {
+  return withOptionalParams('/auth/verify-request', {
+    email: params.email,
+    redirect: params.redirect,
+    redisId: params.redisId,
+    billedEmail: params.billedEmail,
+  })
 }
 
 export function signInCallbackUrl(searchParams: {
