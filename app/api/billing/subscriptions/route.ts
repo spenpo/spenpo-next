@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import {
-  listCustomerSubscriptions,
-  requireBillingContext,
-} from '@/app/utils/billing'
+import { listCustomerSubscriptions } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 
 export async function GET() {
   const context = await requireBillingContext()

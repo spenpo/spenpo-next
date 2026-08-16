@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  getOwnedInvoice,
-  prepareInvoicePayment,
-  requireBillingContext,
-} from '@/app/utils/billing'
+import { getOwnedInvoice, prepareInvoicePayment } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 
 type PayBody = {
   paymentMethodType?: 'card' | 'us_bank_account'

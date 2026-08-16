@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import GitHubProvider from 'next-auth/providers/github'
 import GoogleProvider from 'next-auth/providers/google'
-import EmailProvider from 'next-auth/providers/email'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import prisma from '@/app/utils/prisma'
 import { AuthOptions } from 'next-auth'
@@ -15,11 +14,14 @@ const AUTH_FROM =
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    EmailProvider({
+    {
+      id: 'email',
+      name: 'Email',
+      type: 'email' as const,
       from: AUTH_FROM,
       maxAge: 24 * 60 * 60,
       sendVerificationRequest: sendAuthVerificationRequest,
-    }),
+    },
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',

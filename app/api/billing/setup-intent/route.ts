@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireBillingContext } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 import { stripeBilling } from '@/app/utils/stripe'
 
 export async function POST() {

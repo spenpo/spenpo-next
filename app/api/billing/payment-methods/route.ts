@@ -5,10 +5,10 @@ import {
   ownedPaymentMethod,
   preferredDefaultPaymentMethod,
   reconcileCustomerBankDiscount,
-  requireBillingContext,
   serializePaymentMethod,
   setCustomerDefaultPaymentMethod,
 } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 import { stripeBilling } from '@/app/utils/stripe'
 
 export async function GET() {

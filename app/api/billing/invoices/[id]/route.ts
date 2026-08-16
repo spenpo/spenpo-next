@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  getOwnedInvoice,
-  requireBillingContext,
-  serializeInvoice,
-} from '@/app/utils/billing'
+import { getOwnedInvoice, serializeInvoice } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 
 export async function GET(
   _req: NextRequest,

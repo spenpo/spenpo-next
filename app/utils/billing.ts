@@ -1,10 +1,5 @@
-import { getServerSession } from 'next-auth'
-import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { authOptions } from '@/app/constants/api'
-import prisma from '@/app/utils/prisma'
 import { stripeBilling } from '@/app/utils/stripe'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
 
 export const BANK_DISCOUNT_RATE = 0.02
 const BANK_DISCOUNT_COUPON_METADATA = 'bank_discount'
@@ -288,31 +283,6 @@ export async function listCustomerPaymentMethods(customerId: string) {
     }),
   ])
   return [...cards.data, ...banks.data]
-}
-
-export async function requireBillingContext() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return {
-      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    }
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  })
-
-  if (!user?.email) {
-    return {
-      error: NextResponse.json(
-        { error: 'An email address is required for billing' },
-        { status: 400 }
-      ),
-    }
-  }
-
-  const customerId = await getOrCreateStripeCustomer(user)
-  return { user, customerId, session }
 }
 
 export async function listCustomerInvoices(customerId: string) {

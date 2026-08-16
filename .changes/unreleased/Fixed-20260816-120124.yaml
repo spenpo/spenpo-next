@@ -1,0 +1,3 @@
+kind: Fixed
+body: Keep email magic-link sign-in out of the billing client bundle so Next can build
+time: 2026-08-16T12:01:24.701915+08:00

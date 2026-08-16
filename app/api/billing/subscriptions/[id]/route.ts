@@ -3,9 +3,9 @@ import {
   getOwnedSubscription,
   getOwnedSubscriptionDetail,
   ownedPaymentMethod,
-  requireBillingContext,
   setCustomerDefaultPaymentMethod,
 } from '@/app/utils/billing'
+import { requireBillingContext } from '@/app/utils/billingSession'
 import { stripeBilling } from '@/app/utils/stripe'
 
 const DEFAULT_DAYS_UNTIL_DUE = 30
