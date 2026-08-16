@@ -136,9 +136,6 @@ export const AvatarMenu: React.FC = () => {
                   </Typography>
                 ) : (
                   <Box sx={{ ml: 1, maxWidth: 220 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Join to pay invoices or set up autopay.
-                    </Typography>
                     <Button
                       variant="contained"
                       onClick={() => router.push(JOIN_HREF)}

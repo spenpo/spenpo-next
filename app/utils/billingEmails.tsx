@@ -12,7 +12,7 @@ import {
   paymentMethodLabel,
   serializePaymentMethod,
 } from '@/app/utils/billing'
-import { resend } from '@/app/utils/resend'
+import { renderEmail, resend } from '@/app/utils/resend'
 import { stripeBilling } from '@/app/utils/stripe'
 
 const SITE_URL = 'https://spenpo.com'
@@ -78,22 +78,22 @@ function emailForKind(kind: InvoiceEmailKind, props: InvoiceEmailProps) {
     case 'ready':
       return {
         subject: `Invoice ${props.invoiceNumber} from Spenpo`,
-        react: <InvoiceReady {...props} />,
+        body: <InvoiceReady {...props} />,
       }
     case 'overdue':
       return {
         subject: `Invoice ${props.invoiceNumber} is overdue`,
-        react: <InvoiceOverdue {...props} />,
+        body: <InvoiceOverdue {...props} />,
       }
     case 'paid':
       return {
         subject: `Payment received for invoice ${props.invoiceNumber}`,
-        react: <InvoicePaid {...props} />,
+        body: <InvoicePaid {...props} />,
       }
     case 'failed':
       return {
         subject: `Payment failed for invoice ${props.invoiceNumber}`,
-        react: <InvoicePaymentFailed {...props} />,
+        body: <InvoicePaymentFailed {...props} />,
       }
   }
 }
@@ -134,13 +134,13 @@ export async function sendInvoiceEventEmail(
       kind === 'paid' ? null : invoice.hosted_invoice_url ?? null,
   }
 
-  const { subject, react } = emailForKind(kind, props)
+  const { subject, body } = emailForKind(kind, props)
   const { data, error } = await resend.emails.send(
     {
       from: billingFromAddress(),
       to: [to],
       subject,
-      react,
+      ...(await renderEmail(body)),
       tags: [
         { name: 'invoice_id', value: invoice.id },
         { name: 'event', value: kind },
@@ -189,14 +189,14 @@ export async function sendFirstPaymentMethodEmail(method: Stripe.PaymentMethod) 
       from: billingFromAddress(),
       to: [notifyAddress()],
       subject: `${customer.name || customer.email || customerId} saved a payment method`,
-      react: (
+      ...(await renderEmail(
         <FirstPaymentMethodSaved
           customerName={customer.name ?? null}
           customerEmail={customer.email ?? null}
           methodLabel={paymentMethodLabel(serializePaymentMethod(method))}
           dashboardUrl={stripeCustomerDashboardUrl(customerId, method.livemode)}
         />
-      ),
+      )),
       tags: [
         { name: 'customer_id', value: customerId },
         { name: 'event', value: 'first-payment-method' },

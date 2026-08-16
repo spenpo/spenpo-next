@@ -1,6 +1,10 @@
 import { WP_REST_URI } from '@/app/constants/blog'
 import type { BookReview } from '@/app/constants/books'
 
+const BOOK_REVIEWS_CACHE = {
+  next: { tags: ['book_reviews'], revalidate: 60 },
+}
+
 export async function getBookReviews(page = 1, perPage = 20): Promise<{
   reviews: BookReview[]
   total: number
@@ -8,7 +12,7 @@ export async function getBookReviews(page = 1, perPage = 20): Promise<{
 }> {
   const res = await fetch(
     `${WP_REST_URI}/book_review?per_page=${perPage}&page=${page}&_embed=true&status=publish`,
-    { next: { tags: ['book_reviews'] } }
+    BOOK_REVIEWS_CACHE
   )
 
   if (!res.ok) {
@@ -31,7 +35,7 @@ export async function getBookReviewBySlug(
 ): Promise<BookReview | null> {
   const res = await fetch(
     `${WP_REST_URI}/book_review?slug=${encodeURIComponent(slug)}&_embed=true`,
-    { next: { tags: ['book_reviews'] } }
+    BOOK_REVIEWS_CACHE
   )
 
   if (!res.ok) {

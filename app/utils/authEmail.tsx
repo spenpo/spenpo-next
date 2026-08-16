@@ -1,5 +1,5 @@
 import { SignInMagicLink } from '@/emails/SignInMagicLink'
-import { resend } from '@/app/utils/resend'
+import { renderEmail, resend } from '@/app/utils/resend'
 
 const DEFAULT_FROM = 'Spenpo <billing@spenpo.com>'
 
@@ -24,7 +24,9 @@ export async function sendAuthVerificationRequest({
     from: authFromAddress(),
     to: [identifier],
     subject: 'Your Spenpo sign-in link',
-    react: <SignInMagicLink url={url} email={identifier} />,
+    ...(await renderEmail(
+      <SignInMagicLink url={url} email={identifier} />
+    )),
   })
 
   if (error) {

@@ -1,0 +1,3 @@
+kind: Fixed
+body: Magic-link sign-in emails render on Vercel instead of failing on a missing React Email renderer.
+time: 2026-08-16T14:51:03.612418+08:00

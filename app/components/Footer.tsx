@@ -140,11 +140,6 @@ export const Footer: React.FC = () => {
             Resources
           </Typography>
           <FooterBullet>
-            <Typography variant="body2" component="a" href="/books">
-              Books I&apos;ve read
-            </Typography>
-          </FooterBullet>
-          <FooterBullet>
             <Typography variant="body2" component="a" href="/contact">
               Contact
             </Typography>
@@ -152,6 +147,11 @@ export const Footer: React.FC = () => {
           <FooterBullet>
             <Typography variant="body2" component="a" href="/privacy-policy">
               Privacy Policy
+            </Typography>
+          </FooterBullet>
+          <FooterBullet>
+            <Typography variant="body2" component="a" href="/books">
+              Books I&apos;ve read
             </Typography>
           </FooterBullet>
         </Stack>

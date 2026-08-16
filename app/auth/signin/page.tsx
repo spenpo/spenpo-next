@@ -28,12 +28,12 @@ export default async function Signin({ searchParams }: PageProps) {
   return (
     <AuthCard>
       <Typography variant="h4" component="h1">
-        {invoiceContext ? 'Open your invoice' : 'Join your billing account'}
+        {invoiceContext ? 'Open your invoice' : 'Sign up or sign in'}
       </Typography>
       <Typography color="text.secondary">
         {invoiceContext
           ? `Use ${billedEmail} so we can show the invoice we sent you. We'll email you a link — no password.`
-          : "Pay invoices and set up autopay. We'll email you a link — no password to remember."}
+          : "An account will be created if you&apos;re new."}
       </Typography>
       <EmailSignInForm
         callbackUrl={callbackUrl}
