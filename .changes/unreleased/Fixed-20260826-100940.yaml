@@ -1,0 +1,3 @@
+kind: Fixed
+body: Treat in-progress bank invoice payments as submitted instead of showing Stripe's processing error
+time: 2026-08-26T10:09:40.475873+08:00

@@ -1,4 +1,8 @@
-export function invoiceStatusLabel(status?: string | null) {
+export function invoiceStatusLabel(
+  status?: string | null,
+  paymentIntentStatus?: string | null
+) {
+  if (paymentIntentStatus === 'processing') return 'Processing'
   switch (status) {
     case 'draft':
       return 'Ready to pay'

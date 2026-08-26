@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import {
+  Alert,
   Button,
   Chip,
   ChipProps,
@@ -14,10 +15,10 @@ import {
 import Link from 'next/link'
 import prisma from '@/app/utils/prisma'
 import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
-import { formatMoney, getInvoicePostPayState, getOwnedInvoice, serializeInvoice } from '@/app/utils/billing'
+import { formatMoney, getInvoicePostPayState, getOwnedInvoice, isInFlightInvoicePayment, serializeInvoice } from '@/app/utils/billing'
 import { withEmailQuery, firstSearchParam } from '@/app/utils/billingAuth'
 import { requireBillingPage } from '@/app/utils/billingSession'
-import { InvoicePayForm } from '../components/InvoicePayForm'
+import { BankPaymentPending, InvoicePayForm } from '../components/InvoicePayForm'
 import { PostPayActions } from '../components/PostPayActions'
 import { BillingMismatchCard } from '../components/BillingMismatchCard'
 import { invoiceStatusLabel } from '../components/statusLabels'
@@ -29,6 +30,7 @@ const STATUS_COLOR: Record<string, ChipProps['color']> = {
   paid: 'success',
   void: 'default',
   uncollectible: 'error',
+  processing: 'info',
 }
 
 export default async function InvoiceDetailPage({
@@ -55,12 +57,21 @@ export default async function InvoiceDetailPage({
   }
 
   const serialized = serializeInvoice(invoice)
-  const paymentComplete = firstSearchParam(searchParams.payment) === 'complete'
+  const paymentParam = firstSearchParam(searchParams.payment)
+  const paymentComplete = paymentParam === 'complete'
   const paymentIntentId = firstSearchParam(searchParams.payment_intent)
+  const paymentIntentStatus =
+    serialized.paymentIntentStatus ??
+    (paymentParam === 'processing' ? 'processing' : null)
+  const paymentProcessing = paymentIntentStatus === 'processing'
   const postPay =
     paymentComplete && serialized.status === 'paid'
       ? await getInvoicePostPayState(customerId, invoice, paymentIntentId)
       : null
+  const canPay =
+    !isInFlightInvoicePayment(paymentIntentStatus) &&
+    ((serialized.status === 'open' && serialized.amountDue > 0) ||
+      (serialized.status === 'draft' && serialized.subtotal > 0))
 
   return (
     <Stack gap={3}>
@@ -75,8 +86,12 @@ export default async function InvoiceDetailPage({
         <Typography variant="h5">{serialized.number || serialized.id}</Typography>
         <Chip
           size="small"
-          label={invoiceStatusLabel(serialized.status)}
-          color={STATUS_COLOR[serialized.status ?? ''] ?? 'default'}
+          label={invoiceStatusLabel(serialized.status, paymentIntentStatus)}
+          color={
+            STATUS_COLOR[
+              paymentProcessing ? 'processing' : serialized.status ?? ''
+            ] ?? 'default'
+          }
         />
       </Stack>
       {serialized.description && (
@@ -147,8 +162,13 @@ export default async function InvoiceDetailPage({
         </TableBody>
       </Table>
       {postPay && <PostPayActions initial={postPay} />}
-      {((serialized.status === 'open' && serialized.amountDue > 0) ||
-        (serialized.status === 'draft' && serialized.subtotal > 0)) && (
+      {paymentProcessing && <BankPaymentPending />}
+      {paymentIntentStatus === 'succeeded' && serialized.status !== 'paid' && (
+        <Alert severity="success">
+          Payment received. This invoice will update in a moment.
+        </Alert>
+      )}
+      {canPay && (
         <>
           <Typography variant="body2" color="text.secondary">
             This total is based on your default payment method when the invoice was

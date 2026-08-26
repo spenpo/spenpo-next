@@ -29,6 +29,7 @@ export type SerializedInvoice = {
   description: string | null
   lines: SerializedInvoiceLine[]
   subscriptionId: string | null
+  paymentIntentStatus: Stripe.PaymentIntent.Status | null
 }
 
 export type SerializedPaymentMethod = {
@@ -90,6 +91,32 @@ export function invoiceCustomerId(invoice: Stripe.Invoice): string | null {
   return typeof customer === 'string' ? customer : customer.id
 }
 
+const INVOICE_PAYMENT_INTENT_EXPAND = [
+  'payments.data.payment.payment_intent',
+] as const
+
+export function invoicePaymentIntentStatus(
+  invoice: Stripe.Invoice
+): Stripe.PaymentIntent.Status | null {
+  const payments = invoice.payments?.data ?? []
+  const payment = payments.find((item) => item.is_default) ?? payments[0]
+  const intent = payment?.payment?.payment_intent
+  if (intent && typeof intent === 'object' && 'status' in intent) {
+    return intent.status
+  }
+  return null
+}
+
+export function isInFlightInvoicePayment(
+  paymentIntentStatus: string | null | undefined
+) {
+  return (
+    paymentIntentStatus === 'processing' ||
+    paymentIntentStatus === 'succeeded' ||
+    paymentIntentStatus === 'requires_capture'
+  )
+}
+
 export function serializeInvoice(invoice: Stripe.Invoice): SerializedInvoice {
   const lines = (invoice.lines?.data ?? []).map((line) => ({
     id: line.id,
@@ -115,6 +142,7 @@ export function serializeInvoice(invoice: Stripe.Invoice): SerializedInvoice {
     description: invoice.description,
     lines,
     subscriptionId: invoiceSubscriptionId(invoice),
+    paymentIntentStatus: invoicePaymentIntentStatus(invoice),
   }
 }
 
@@ -304,16 +332,26 @@ export async function listCustomerInvoices(customerId: string) {
     (invoice) => invoice.status !== 'draft' && invoice.status !== 'open'
   )
 
+  const openWithPayment = await Promise.all(
+    open.map((invoice) =>
+      stripeBilling.invoices.retrieve(invoice.id, {
+        expand: [...INVOICE_PAYMENT_INTENT_EXPAND],
+      })
+    )
+  )
+
   return {
     drafts: drafts.map(serializeInvoice),
-    open: open.map(serializeInvoice),
+    open: openWithPayment.map(serializeInvoice),
     history: history.map(serializeInvoice),
   }
 }
 
 export async function getOwnedInvoice(customerId: string, invoiceId: string) {
   try {
-    const invoice = await stripeBilling.invoices.retrieve(invoiceId)
+    const invoice = await stripeBilling.invoices.retrieve(invoiceId, {
+      expand: [...INVOICE_PAYMENT_INTENT_EXPAND],
+    })
     if (invoiceCustomerId(invoice) !== customerId) {
       return null
     }
@@ -509,7 +547,6 @@ export async function prepareInvoicePayment(invoice: Stripe.Invoice) {
     return { error: 'This invoice cannot be paid', status: 409 as const }
   }
 
-  const sessionSecretPromise = paymentElementCustomerSessionSecret(customerId)
   let current = invoice
 
   if (current.status === 'draft') {
@@ -519,14 +556,24 @@ export async function prepareInvoicePayment(invoice: Stripe.Invoice) {
 
     current = await stripeBilling.invoices.finalizeInvoice(current.id, {
       auto_advance: false,
-      expand: ['confirmation_secret'],
+      expand: ['confirmation_secret', ...INVOICE_PAYMENT_INTENT_EXPAND],
     })
   } else if (current.status === 'open') {
     current = await stripeBilling.invoices.retrieve(current.id, {
-      expand: ['confirmation_secret'],
+      expand: ['confirmation_secret', ...INVOICE_PAYMENT_INTENT_EXPAND],
     })
   } else {
     return { error: 'This invoice cannot be paid', status: 409 as const }
+  }
+
+  const paymentIntentStatus = invoicePaymentIntentStatus(current)
+  if (isInFlightInvoicePayment(paymentIntentStatus)) {
+    return {
+      clientSecret: null,
+      customerSessionClientSecret: null,
+      paymentIntentStatus,
+      invoice: serializeInvoice(current),
+    }
   }
 
   if (current.amount_due <= 0) {
@@ -543,7 +590,9 @@ export async function prepareInvoicePayment(invoice: Stripe.Invoice) {
 
   return {
     clientSecret,
-    customerSessionClientSecret: await sessionSecretPromise,
+    customerSessionClientSecret:
+      await paymentElementCustomerSessionSecret(customerId),
+    paymentIntentStatus,
     invoice: serializeInvoice(current),
   }
 }

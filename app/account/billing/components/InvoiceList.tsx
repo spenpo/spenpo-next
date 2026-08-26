@@ -21,6 +21,7 @@ const STATUS_COLOR: Record<string, ChipProps['color']> = {
   paid: 'success',
   void: 'default',
   uncollectible: 'error',
+  processing: 'info',
 }
 
 function amountCell(invoice: SerializedInvoice) {
@@ -80,13 +81,23 @@ function InvoiceTable({
             <TableCell>
               <Chip
                 size="small"
-                label={invoiceStatusLabel(invoice.status)}
-                color={STATUS_COLOR[invoice.status ?? ''] ?? 'default'}
+                label={invoiceStatusLabel(
+                  invoice.status,
+                  invoice.paymentIntentStatus
+                )}
+                color={
+                  STATUS_COLOR[
+                    invoice.paymentIntentStatus === 'processing'
+                      ? 'processing'
+                      : invoice.status ?? ''
+                  ] ?? 'default'
+                }
               />
             </TableCell>
             <TableCell align="right">{amountCell(invoice)}</TableCell>
             <TableCell align="right">
               {showPay &&
+                invoice.paymentIntentStatus !== 'processing' &&
                 (invoice.status === 'open' || invoice.status === 'draft') &&
                 invoice.subtotal > 0 && (
                   <Button

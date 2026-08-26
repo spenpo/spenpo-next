@@ -1,27 +1,53 @@
 'use client'
 import React, { FormEvent, useEffect, useState } from 'react'
-import { Box, Button, Stack, Typography } from '@mui/material'
+import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import {
   Elements,
   PaymentElement,
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
+import { loadStripe, StripeError } from '@stripe/stripe-js'
 import { useRouter } from 'next/navigation'
-import { SerializedInvoice } from '@/app/utils/billing'
+import {
+  isInFlightInvoicePayment,
+  SerializedInvoice,
+} from '@/app/utils/billing'
 import { PriceBreakdown } from './PriceBreakdown'
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
 )
 
-function PayForm({ invoice }: { invoice: SerializedInvoice }) {
+export function BankPaymentPending() {
+  return (
+    <Alert severity="info">
+      Payment submitted. Bank transfers can take a few days to complete. This
+      invoice will show as paid when the transfer clears.
+    </Alert>
+  )
+}
+
+function PayForm({
+  invoice,
+  clientSecret,
+}: {
+  invoice: SerializedInvoice
+  clientSecret: string
+}) {
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  const finish = (status: string, paymentIntentId?: string) => {
+    const query =
+      status === 'processing' ? 'payment=processing' : 'payment=complete'
+    const intent = paymentIntentId ? `&payment_intent=${paymentIntentId}` : ''
+    router.push(`/account/billing/${invoice.id}?${query}${intent}`)
+    router.refresh()
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -38,28 +64,31 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
       redirect: 'if_required',
     })
 
+    const confirmed =
+      paymentIntent ??
+      error?.payment_intent ??
+      (await stripe.retrievePaymentIntent(clientSecret)).paymentIntent
+
+    if (confirmed?.status === 'processing') {
+      finish('processing', confirmed.id)
+      return
+    }
+
+    if (
+      confirmed?.status === 'succeeded' ||
+      confirmed?.status === 'requires_capture'
+    ) {
+      finish('complete', confirmed.id)
+      return
+    }
+
     if (error) {
-      setMessage(error.message ?? 'Payment failed.')
+      setMessage(confirmErrorMessage(error))
       setIsLoading(false)
       return
     }
 
-    if (paymentIntent?.status === 'succeeded') {
-      router.push(
-        `/account/billing/${invoice.id}?payment=complete&payment_intent=${paymentIntent.id}`
-      )
-      router.refresh()
-      return
-    }
-
-    if (paymentIntent?.status === 'processing') {
-      setMessage(
-        'Payment submitted. Bank transfers can take a few days to complete.'
-      )
-      router.refresh()
-    } else {
-      setMessage('Payment is still pending. Refresh this page in a moment.')
-    }
+    setMessage('Payment is still pending. Refresh this page in a moment.')
     setIsLoading(false)
   }
 
@@ -86,16 +115,31 @@ function PayForm({ invoice }: { invoice: SerializedInvoice }) {
   )
 }
 
+function confirmErrorMessage(error: StripeError) {
+  if (error.message && error.message !== 'A processing error occurred.') {
+    return error.message
+  }
+  return 'Payment failed. Try another payment method or refresh this page.'
+}
+
 export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [customerSessionClientSecret, setCustomerSessionClientSecret] =
     useState<string | null>(null)
   const [payable, setPayable] = useState(invoice)
   const [message, setMessage] = useState<string | null>(null)
+  const [paymentIntentStatus, setPaymentIntentStatus] = useState<string | null>(
+    invoice.paymentIntentStatus
+  )
   const [loadingSecret, setLoadingSecret] = useState(true)
 
   useEffect(() => {
     if (invoice.status !== 'open' && invoice.status !== 'draft') return
+    if (isInFlightInvoicePayment(invoice.paymentIntentStatus)) {
+      setPaymentIntentStatus(invoice.paymentIntentStatus)
+      setLoadingSecret(false)
+      return
+    }
 
     let cancelled = false
     const load = async () => {
@@ -110,7 +154,8 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
         return
       }
       setPayable(result.invoice)
-      setClientSecret(result.clientSecret)
+      setPaymentIntentStatus(result.paymentIntentStatus ?? null)
+      setClientSecret(result.clientSecret ?? null)
       setCustomerSessionClientSecret(result.customerSessionClientSecret ?? null)
       setLoadingSecret(false)
     }
@@ -118,10 +163,25 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
     return () => {
       cancelled = true
     }
-  }, [invoice.id, invoice.status])
+  }, [invoice.id, invoice.status, invoice.paymentIntentStatus])
 
   if (loadingSecret) {
     return <Typography>Preparing payment...</Typography>
+  }
+
+  if (paymentIntentStatus === 'processing') {
+    return <BankPaymentPending />
+  }
+
+  if (
+    paymentIntentStatus === 'succeeded' ||
+    paymentIntentStatus === 'requires_capture'
+  ) {
+    return (
+      <Alert severity="success">
+        Payment received. This invoice will update in a moment.
+      </Alert>
+    )
   }
 
   if (!clientSecret) {
@@ -137,7 +197,7 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
         ...(customerSessionClientSecret ? { customerSessionClientSecret } : {}),
       }}
     >
-      <PayForm invoice={payable} />
+      <PayForm invoice={payable} clientSecret={clientSecret} />
     </Elements>
   )
 }
