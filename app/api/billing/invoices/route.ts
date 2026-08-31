@@ -6,6 +6,6 @@ export async function GET() {
   const context = await requireBillingContext()
   if ('error' in context) return context.error
 
-  const invoices = await listCustomerInvoices(context.customerId)
+  const invoices = await listCustomerInvoices(context.customerIds)
   return NextResponse.json(invoices)
 }

@@ -4,6 +4,7 @@ import {
   getOwnedSubscriptionDetail,
   ownedPaymentMethod,
   setCustomerDefaultPaymentMethod,
+  subscriptionCustomerId,
 } from '@/app/utils/billing'
 import { requireBillingContext } from '@/app/utils/billingSession'
 import { stripeBilling } from '@/app/utils/stripe'
@@ -18,8 +19,11 @@ type SubscriptionActionBody = {
   enabled?: boolean
 }
 
-async function subscriptionResponse(customerId: string, subscriptionId: string) {
-  const detail = await getOwnedSubscriptionDetail(customerId, subscriptionId)
+async function subscriptionResponse(
+  customerIds: string[],
+  subscriptionId: string
+) {
+  const detail = await getOwnedSubscriptionDetail(customerIds, subscriptionId)
   if (!detail) {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
@@ -33,7 +37,7 @@ export async function GET(
   const context = await requireBillingContext()
   if ('error' in context) return context.error
 
-  const detail = await getOwnedSubscriptionDetail(context.customerId, params.id)
+  const detail = await getOwnedSubscriptionDetail(context.customerIds, params.id)
   if (!detail) {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
@@ -48,11 +52,12 @@ export async function POST(
   const context = await requireBillingContext()
   if ('error' in context) return context.error
 
-  const subscription = await getOwnedSubscription(context.customerId, params.id)
+  const subscription = await getOwnedSubscription(context.customerIds, params.id)
   if (!subscription) {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
 
+  const ownerId = subscriptionCustomerId(subscription)
   const body = (await req.json()) as SubscriptionActionBody
   const action = body.action
 
@@ -67,7 +72,7 @@ export async function POST(
       await stripeBilling.subscriptions.update(subscription.id, {
         cancel_at_period_end: true,
       })
-      return subscriptionResponse(context.customerId, subscription.id)
+      return subscriptionResponse(context.customerIds, subscription.id)
     }
 
     if (action === 'resume') {
@@ -80,7 +85,7 @@ export async function POST(
       await stripeBilling.subscriptions.update(subscription.id, {
         cancel_at_period_end: false,
       })
-      return subscriptionResponse(context.customerId, subscription.id)
+      return subscriptionResponse(context.customerIds, subscription.id)
     }
 
     if (action === 'set_payment_method') {
@@ -90,10 +95,7 @@ export async function POST(
           { status: 400 }
         )
       }
-      const method = await ownedPaymentMethod(
-        context.customerId,
-        body.paymentMethodId
-      )
+      const method = await ownedPaymentMethod(ownerId, body.paymentMethodId)
       if (!method) {
         return NextResponse.json(
           { error: 'Payment method not found' },
@@ -105,9 +107,9 @@ export async function POST(
         stripeBilling.subscriptions.update(subscription.id, {
           default_payment_method: method.id,
         }),
-        setCustomerDefaultPaymentMethod(context.customerId, method),
+        setCustomerDefaultPaymentMethod(ownerId, method),
       ])
-      return subscriptionResponse(context.customerId, subscription.id)
+      return subscriptionResponse(context.customerIds, subscription.id)
     }
 
     if (action === 'set_autopay') {
@@ -129,7 +131,7 @@ export async function POST(
           )
         }
 
-        const method = await ownedPaymentMethod(context.customerId, paymentMethodId)
+        const method = await ownedPaymentMethod(ownerId, paymentMethodId)
         if (!method) {
           return NextResponse.json(
             { error: 'Payment method not found' },
@@ -143,9 +145,9 @@ export async function POST(
             default_payment_method: method.id,
             proration_behavior: 'none',
           }),
-          setCustomerDefaultPaymentMethod(context.customerId, method),
+          setCustomerDefaultPaymentMethod(ownerId, method),
         ])
-        return subscriptionResponse(context.customerId, subscription.id)
+        return subscriptionResponse(context.customerIds, subscription.id)
       }
 
       await stripeBilling.subscriptions.update(subscription.id, {
@@ -153,7 +155,7 @@ export async function POST(
         days_until_due: subscription.days_until_due ?? DEFAULT_DAYS_UNTIL_DUE,
         proration_behavior: 'none',
       })
-      return subscriptionResponse(context.customerId, subscription.id)
+      return subscriptionResponse(context.customerIds, subscription.id)
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

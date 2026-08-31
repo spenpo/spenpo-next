@@ -14,8 +14,8 @@ import {
 } from '@mui/material'
 import Link from 'next/link'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
-import { formatMoney, getInvoicePostPayState, getOwnedInvoice, isInFlightInvoicePayment, serializeInvoice } from '@/app/utils/billing'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
+import { formatMoney, getInvoicePostPayState, getOwnedInvoice, invoiceCustomerId, isInFlightInvoicePayment, serializeInvoice } from '@/app/utils/billing'
 import { withEmailQuery, firstSearchParam } from '@/app/utils/billingAuth'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { BankPaymentPending, InvoicePayForm } from '../components/InvoicePayForm'
@@ -50,8 +50,8 @@ export default async function InvoiceDetailPage({
     redirect(withEmailQuery('/account/billing', billedEmail))
   }
 
-  const customerId = await getOrCreateStripeCustomer(user)
-  const invoice = await getOwnedInvoice(customerId, params.invoiceId)
+  const { customerIds } = await getBillingCustomers(user)
+  const invoice = await getOwnedInvoice(customerIds, params.invoiceId)
   if (!invoice) {
     redirect(withEmailQuery('/account/billing', billedEmail))
   }
@@ -60,13 +60,14 @@ export default async function InvoiceDetailPage({
   const paymentParam = firstSearchParam(searchParams.payment)
   const paymentComplete = paymentParam === 'complete'
   const paymentIntentId = firstSearchParam(searchParams.payment_intent)
+  const ownerId = invoiceCustomerId(invoice)
   const paymentIntentStatus =
     serialized.paymentIntentStatus ??
     (paymentParam === 'processing' ? 'processing' : null)
   const paymentProcessing = paymentIntentStatus === 'processing'
   const postPay =
-    paymentComplete && serialized.status === 'paid'
-      ? await getInvoicePostPayState(customerId, invoice, paymentIntentId)
+    paymentComplete && serialized.status === 'paid' && ownerId
+      ? await getInvoicePostPayState(ownerId, invoice, paymentIntentId)
       : null
   const canPay =
     !isInFlightInvoicePayment(paymentIntentStatus) &&

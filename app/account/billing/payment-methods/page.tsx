@@ -1,6 +1,6 @@
 import { Stack, Typography } from '@mui/material'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
 import {
   bankDiscountCents,
   formatMoney,
@@ -24,9 +24,9 @@ export default async function PaymentMethodsPage({ searchParams }: PageProps) {
   }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
-  const customerId = user?.email ? await getOrCreateStripeCustomer(user) : null
-  const subscriptions = customerId
-    ? await listCustomerSubscriptions(customerId)
+  const billing = user?.email ? await getBillingCustomers(user) : null
+  const subscriptions = billing
+    ? await listCustomerSubscriptions(billing.customerIds)
     : { current: [] }
   const annualList = subscriptions.current.reduce(
     (sum, subscription) => sum + subscriptionAnnualListAmount(subscription),

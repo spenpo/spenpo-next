@@ -1,0 +1,3 @@
+kind: Fixed
+body: Sign-in copy shows a normal apostrophe in "you're new" instead of the raw HTML entity.
+time: 2026-08-31T17:24:29.373007+08:00

@@ -1,0 +1,3 @@
+kind: Changed
+body: Invoice emails sign the customer into billing with a 7-day magic link instead of Stripe's hosted pay page, and create an unverified account if they are new.
+time: 2026-08-31T16:57:01.789765+08:00

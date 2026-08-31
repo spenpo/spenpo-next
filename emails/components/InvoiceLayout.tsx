@@ -20,7 +20,8 @@ export type InvoiceEmailProps = {
   dueDate: string | null
   invoiceUrl: string
   billedEmail?: string | null
-  hostedInvoiceUrl?: string | null
+  signInUrl?: string | null
+  linkExpiresDays?: number | null
 }
 
 type InvoiceLayoutProps = InvoiceEmailProps & {
@@ -89,7 +90,8 @@ export function InvoiceLayout({
   invoiceUrl,
   actionLabel,
   billedEmail,
-  hostedInvoiceUrl,
+  signInUrl,
+  linkExpiresDays,
 }: InvoiceLayoutProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi,'
 
@@ -107,7 +109,7 @@ export function InvoiceLayout({
           </Heading>
           <Text style={paragraph}>{greeting}</Text>
           <Text style={paragraph}>{intro}</Text>
-          {billedEmail ? (
+          {billedEmail && !linkExpiresDays ? (
             <Text style={paragraph}>Sign in as {billedEmail} to view this invoice.</Text>
           ) : null}
           <Section style={{ margin: '8px 0 24px' }}>
@@ -122,11 +124,19 @@ export function InvoiceLayout({
           <Button href={invoiceUrl} style={button}>
             {actionLabel}
           </Button>
-          {hostedInvoiceUrl ? (
+          {linkExpiresDays ? (
             <Text style={{ ...paragraph, marginTop: '16px', marginBottom: 0 }}>
-              <Link href={hostedInvoiceUrl} style={{ color: '#111827' }}>
-                Pay without signing in
-              </Link>
+              This link expires in {linkExpiresDays} days
+              {billedEmail ? ` and signs you in as ${billedEmail}` : ''} — no
+              password. If it has expired,{' '}
+              {signInUrl ? (
+                <Link href={signInUrl} style={{ color: '#111827' }}>
+                  request a new sign-in link
+                </Link>
+              ) : (
+                'request a new sign-in link'
+              )}
+              .
             </Text>
           ) : null}
           <Hr

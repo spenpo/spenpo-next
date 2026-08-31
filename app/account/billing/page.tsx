@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
 import { listCustomerInvoices } from '@/app/utils/billing'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { InvoiceList } from './components/InvoiceList'
@@ -26,8 +26,8 @@ export default async function BillingPage({ searchParams }: PageProps) {
     )
   }
 
-  const customerId = await getOrCreateStripeCustomer(user)
-  const { drafts, open, history } = await listCustomerInvoices(customerId)
+  const { customerIds } = await getBillingCustomers(user)
+  const { drafts, open, history } = await listCustomerInvoices(customerIds)
 
   return (
     <InvoiceList

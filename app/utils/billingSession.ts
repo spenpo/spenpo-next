@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/app/constants/api'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
 import {
   billingSignInUrl,
   emailsMatch,
@@ -32,8 +32,8 @@ export async function requireBillingContext() {
     }
   }
 
-  const customerId = await getOrCreateStripeCustomer(user)
-  return { user, customerId, session }
+  const { customerId, customerIds } = await getBillingCustomers(user)
+  return { user, customerId, customerIds, session }
 }
 
 export async function requireBillingPage(

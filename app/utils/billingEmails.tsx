@@ -14,8 +14,13 @@ import {
 } from '@/app/utils/billing'
 import { renderEmail, resend } from '@/app/utils/resend'
 import { stripeBilling } from '@/app/utils/stripe'
+import {
+  INVOICE_SIGN_IN_DAYS,
+  createInvoiceMagicLink,
+  invoicePayUrl,
+  invoiceSignInUrl,
+} from '@/app/utils/billingMagicLink'
 
-const SITE_URL = 'https://spenpo.com'
 /** Override with BILLING_FROM_EMAIL. Must be a local-part on verified spenpo.com. */
 const DEFAULT_FROM = 'Spenpo Billing <billing@spenpo.com>'
 
@@ -38,12 +43,6 @@ const IDEMPOTENCY_PREFIX: Record<InvoiceEmailKind, string> = {
 
 function billingFromAddress() {
   return process.env.BILLING_FROM_EMAIL || DEFAULT_FROM
-}
-
-function invoicePayUrl(invoiceId: string, email?: string | null) {
-  const url = new URL(`${SITE_URL}/account/billing/${invoiceId}`)
-  if (email) url.searchParams.set('email', email)
-  return url.toString()
 }
 
 function formatInvoiceDate(unix: number | null | undefined) {
@@ -123,15 +122,26 @@ export async function sendInvoiceEventEmail(
 
   const invoiceNumber = invoice.number || invoice.id
   const amountCents = kind === 'paid' ? invoice.amount_paid : invoice.amount_due
+  const signInUrl = invoiceSignInUrl(invoice.id, to)
+  const usesMagicLink = kind === 'ready' || kind === 'overdue' || kind === 'failed'
+  let invoiceUrl = invoicePayUrl(invoice.id, to)
+
+  if (usesMagicLink) {
+    const magicUrl = await createInvoiceMagicLink(to, invoice.id, {
+      name: invoice.customer_name,
+    })
+    if (magicUrl) invoiceUrl = magicUrl
+  }
+
   const props: InvoiceEmailProps = {
     customerName: invoice.customer_name,
     invoiceNumber,
     amount: formatMoney(amountCents, invoice.currency),
     dueDate: formatInvoiceDate(invoice.due_date),
-    invoiceUrl: invoicePayUrl(invoice.id, to),
+    invoiceUrl,
     billedEmail: to,
-    hostedInvoiceUrl:
-      kind === 'paid' ? null : invoice.hosted_invoice_url ?? null,
+    signInUrl: usesMagicLink ? signInUrl : null,
+    linkExpiresDays: usesMagicLink ? INVOICE_SIGN_IN_DAYS : null,
   }
 
   const { subject, body } = emailForKind(kind, props)

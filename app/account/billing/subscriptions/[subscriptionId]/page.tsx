@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
 import { getOwnedSubscriptionDetail } from '@/app/utils/billing'
 import { withEmailQuery } from '@/app/utils/billingAuth'
 import { requireBillingPage } from '@/app/utils/billingSession'
@@ -25,8 +25,8 @@ export default async function SubscriptionDetailPage({
     redirect(withEmailQuery('/account/billing/subscriptions', billedEmail))
   }
 
-  const customerId = await getOrCreateStripeCustomer(user)
-  const detail = await getOwnedSubscriptionDetail(customerId, params.subscriptionId)
+  const { customerIds } = await getBillingCustomers(user)
+  const detail = await getOwnedSubscriptionDetail(customerIds, params.subscriptionId)
   if (!detail) {
     redirect(withEmailQuery('/account/billing/subscriptions', billedEmail))
   }

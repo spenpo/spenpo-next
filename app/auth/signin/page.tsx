@@ -33,7 +33,7 @@ export default async function Signin({ searchParams }: PageProps) {
       <Typography color="text.secondary">
         {invoiceContext
           ? `Use ${billedEmail} so we can show the invoice we sent you. We'll email you a link — no password.`
-          : "An account will be created if you&apos;re new."}
+          : "An account will be created if you're new."}
       </Typography>
       <EmailSignInForm
         callbackUrl={callbackUrl}

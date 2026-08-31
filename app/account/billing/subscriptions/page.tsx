@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material'
 import prisma from '@/app/utils/prisma'
-import { getOrCreateStripeCustomer } from '@/app/utils/stripeCustomer'
+import { getBillingCustomers } from '@/app/utils/stripeCustomer'
 import { listCustomerSubscriptions } from '@/app/utils/billing'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { SubscriptionList } from '../components/SubscriptionList'
@@ -26,8 +26,8 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
     )
   }
 
-  const customerId = await getOrCreateStripeCustomer(user)
-  const { current, history } = await listCustomerSubscriptions(customerId)
+  const { customerIds } = await getBillingCustomers(user)
+  const { current, history } = await listCustomerSubscriptions(customerIds)
 
   return (
     <SubscriptionList

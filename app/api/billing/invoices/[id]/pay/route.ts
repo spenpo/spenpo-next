@@ -9,7 +9,7 @@ export async function POST(
   const context = await requireBillingContext()
   if ('error' in context) return context.error
 
-  const invoice = await getOwnedInvoice(context.customerId, params.id)
+  const invoice = await getOwnedInvoice(context.customerIds, params.id)
   if (!invoice) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
   }

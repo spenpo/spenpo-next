@@ -91,6 +91,11 @@ export function invoiceCustomerId(invoice: Stripe.Invoice): string | null {
   return typeof customer === 'string' ? customer : customer.id
 }
 
+export function asCustomerIds(customerId: string | string[]) {
+  const ids = Array.isArray(customerId) ? customerId : [customerId]
+  return ids.filter(Boolean)
+}
+
 const INVOICE_PAYMENT_INTENT_EXPAND = [
   'payments.data.payment.payment_intent',
 ] as const
@@ -317,14 +322,22 @@ export async function listCustomerPaymentMethods(customerId: string) {
   return [...cards.data, ...banks.data]
 }
 
-export async function listCustomerInvoices(customerId: string) {
+export async function listCustomerInvoices(customerId: string | string[]) {
   const invoices: Stripe.Invoice[] = []
-  for await (const invoice of stripeBilling.invoices.list({
-    customer: customerId,
-    limit: 100,
-  })) {
-    if (invoice.status) invoices.push(invoice)
+  const seen = new Set<string>()
+
+  for (const id of asCustomerIds(customerId)) {
+    for await (const invoice of stripeBilling.invoices.list({
+      customer: id,
+      limit: 100,
+    })) {
+      if (!invoice.status || seen.has(invoice.id)) continue
+      seen.add(invoice.id)
+      invoices.push(invoice)
+    }
   }
+
+  invoices.sort((a, b) => b.created - a.created)
 
   const drafts = invoices.filter((invoice) => invoice.status === 'draft')
   const open = invoices.filter((invoice) => invoice.status === 'open')
@@ -347,12 +360,17 @@ export async function listCustomerInvoices(customerId: string) {
   }
 }
 
-export async function getOwnedInvoice(customerId: string, invoiceId: string) {
+export async function getOwnedInvoice(
+  customerId: string | string[],
+  invoiceId: string
+) {
+  const allowed = new Set(asCustomerIds(customerId))
   try {
     const invoice = await stripeBilling.invoices.retrieve(invoiceId, {
       expand: [...INVOICE_PAYMENT_INTENT_EXPAND],
     })
-    if (invoiceCustomerId(invoice) !== customerId) {
+    const ownerId = invoiceCustomerId(invoice)
+    if (!ownerId || !allowed.has(ownerId)) {
       return null
     }
     return invoice
@@ -597,32 +615,43 @@ export async function prepareInvoicePayment(invoice: Stripe.Invoice) {
   }
 }
 
-export async function listCustomerSubscriptions(customerId: string) {
+export async function listCustomerSubscriptions(customerId: string | string[]) {
   const subscriptions: Stripe.Subscription[] = []
-  for await (const subscription of stripeBilling.subscriptions.list({
-    customer: customerId,
-    status: 'all',
-    expand: [...SUBSCRIPTION_LIST_EXPAND],
-    limit: 100,
-  })) {
-    subscriptions.push(subscription)
-  }
-
+  const seenSubscriptions = new Set<string>()
   const openInvoices: Stripe.Invoice[] = []
   const draftInvoices: Stripe.Invoice[] = []
-  for await (const invoice of stripeBilling.invoices.list({
-    customer: customerId,
-    status: 'open',
-    limit: 100,
-  })) {
-    openInvoices.push(invoice)
-  }
-  for await (const invoice of stripeBilling.invoices.list({
-    customer: customerId,
-    status: 'draft',
-    limit: 100,
-  })) {
-    draftInvoices.push(invoice)
+  const seenInvoices = new Set<string>()
+
+  for (const id of asCustomerIds(customerId)) {
+    for await (const subscription of stripeBilling.subscriptions.list({
+      customer: id,
+      status: 'all',
+      expand: [...SUBSCRIPTION_LIST_EXPAND],
+      limit: 100,
+    })) {
+      if (seenSubscriptions.has(subscription.id)) continue
+      seenSubscriptions.add(subscription.id)
+      subscriptions.push(subscription)
+    }
+
+    for await (const invoice of stripeBilling.invoices.list({
+      customer: id,
+      status: 'open',
+      limit: 100,
+    })) {
+      if (seenInvoices.has(invoice.id)) continue
+      seenInvoices.add(invoice.id)
+      openInvoices.push(invoice)
+    }
+    for await (const invoice of stripeBilling.invoices.list({
+      customer: id,
+      status: 'draft',
+      limit: 100,
+    })) {
+      if (seenInvoices.has(invoice.id)) continue
+      seenInvoices.add(invoice.id)
+      draftInvoices.push(invoice)
+    }
   }
 
   const payableBySubscription = new Map<string, Stripe.Invoice>()
@@ -648,14 +677,15 @@ export async function listCustomerSubscriptions(customerId: string) {
 }
 
 export async function getOwnedSubscription(
-  customerId: string,
+  customerId: string | string[],
   subscriptionId: string
 ) {
+  const allowed = new Set(asCustomerIds(customerId))
   try {
     const subscription = await stripeBilling.subscriptions.retrieve(subscriptionId, {
       expand: [...SUBSCRIPTION_EXPAND],
     })
-    if (subscriptionCustomerId(subscription) !== customerId) {
+    if (!allowed.has(subscriptionCustomerId(subscription))) {
       return null
     }
     return subscription
@@ -667,24 +697,25 @@ export async function getOwnedSubscription(
 }
 
 export async function getOwnedSubscriptionDetail(
-  customerId: string,
+  customerId: string | string[],
   subscriptionId: string
 ) {
   const subscription = await getOwnedSubscription(customerId, subscriptionId)
   if (!subscription) return null
 
+  const ownerId = subscriptionCustomerId(subscription)
   const [openInvoices, draftInvoices, methods] = await Promise.all([
     stripeBilling.invoices.list({
-      customer: customerId,
+      customer: ownerId,
       status: 'open',
       limit: 100,
     }),
     stripeBilling.invoices.list({
-      customer: customerId,
+      customer: ownerId,
       status: 'draft',
       limit: 100,
     }),
-    listCustomerPaymentMethods(customerId),
+    listCustomerPaymentMethods(ownerId),
   ])
 
   const payableInvoice =
