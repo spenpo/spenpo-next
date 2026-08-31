@@ -107,6 +107,8 @@ export async function sendInvoiceEventEmail(
   if (kind === 'ready') {
     const heldDraft = invoice.status === 'draft' && invoice.auto_advance === false
     if (invoice.status !== 'open' && !heldDraft) return
+    const payable = Math.max(invoice.amount_due ?? 0, invoice.subtotal ?? 0)
+    if (payable <= 0) return
   }
 
   if (!process.env.RESEND_API_KEY) {
@@ -156,7 +158,9 @@ export async function sendInvoiceEventEmail(
         { name: 'event', value: kind },
       ],
     },
-    { idempotencyKey: `${IDEMPOTENCY_PREFIX[kind]}/${invoice.id}` }
+    {
+      idempotencyKey: `${IDEMPOTENCY_PREFIX[kind]}/${invoice.id}/${invoice.status ?? 'unknown'}`,
+    }
   )
 
   if (error) {

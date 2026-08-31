@@ -1,0 +1,3 @@
+kind: Fixed
+body: Invoice-ready email waits until the invoice has an amount, and uses a status-specific Resend key, so creating a $0 draft no longer blocks the finalized send.
+time: 2026-08-31T17:43:20.803658+08:00
