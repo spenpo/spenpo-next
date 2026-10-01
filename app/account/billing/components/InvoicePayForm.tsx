@@ -8,6 +8,7 @@ import {
   useStripe,
 } from '@stripe/react-stripe-js'
 import { loadStripe, StripeError } from '@stripe/stripe-js'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   isInFlightInvoicePayment,
@@ -19,11 +20,39 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
 )
 
-export function BankPaymentPending() {
+export function BankPaymentPending({
+  showBankPrompt = false,
+}: {
+  showBankPrompt?: boolean
+}) {
   return (
-    <Alert severity="info">
-      Payment submitted. Bank transfers can take a few days to complete. This
-      invoice will show as paid when the transfer clears.
+    <Stack gap={2}>
+      <Alert severity="info">
+        Payment submitted. Bank transfers can take a few days to complete. This
+        invoice will show as paid when the transfer clears.
+      </Alert>
+      {showBankPrompt && <SaveBankPrompt />}
+    </Stack>
+  )
+}
+
+function SaveBankPrompt() {
+  return (
+    <Alert
+      severity="info"
+      action={
+        <Button
+          component={Link}
+          href="/account/billing/payment-methods"
+          color="inherit"
+          size="small"
+        >
+          Save bank account
+        </Button>
+      }
+    >
+      Paying an invoice by bank doesn&apos;t save the account. To get 2% off
+      future invoices, save a bank account as your default payment method.
     </Alert>
   )
 }
@@ -103,8 +132,10 @@ function PayForm({
       />
       {invoice.discountAmount === 0 && (
         <Typography variant="body2" color="text.secondary">
-          This invoice was issued at the card price. Bank payments save 2% on the
-          next invoice.
+          This invoice was issued at the card price. To get 2% off future
+          invoices, <Link href="/account/billing/payment-methods">save a bank
+          account</Link> as your default payment method. Paying this invoice by
+          bank doesn&apos;t save it.
         </Typography>
       )}
       <Button type="submit" variant="contained" disabled={!stripe || isLoading}>
@@ -170,7 +201,7 @@ export function InvoicePayForm({ invoice }: { invoice: SerializedInvoice }) {
   }
 
   if (paymentIntentStatus === 'processing') {
-    return <BankPaymentPending />
+    return <BankPaymentPending showBankPrompt={payable.discountAmount === 0} />
   }
 
   if (

@@ -163,7 +163,9 @@ export default async function InvoiceDetailPage({
         </TableBody>
       </Table>
       {postPay && <PostPayActions initial={postPay} />}
-      {paymentProcessing && <BankPaymentPending />}
+      {paymentProcessing && (
+        <BankPaymentPending showBankPrompt={serialized.discountAmount === 0} />
+      )}
       {paymentIntentStatus === 'succeeded' && serialized.status !== 'paid' && (
         <Alert severity="success">
           Payment received. This invoice will update in a moment.

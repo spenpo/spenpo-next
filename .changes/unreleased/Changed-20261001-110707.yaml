@@ -1,0 +1,3 @@
+kind: Changed
+body: Invoice payment copy now says the 2% bank discount requires saving a bank account as the default payment method, and pending bank payments prompt the customer to save one
+time: 2026-10-01T11:07:07.734025+08:00
