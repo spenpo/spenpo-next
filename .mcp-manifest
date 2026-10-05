@@ -1,0 +1,5 @@
+# MCP servers for this repo. Atoms: .mcp-atoms/ here, else ~/.config/mcp-atoms (dotfiles repo).
+# Regenerate .cursor/mcp.json and .agents/mcp_config.json with: mcp-compose
+targets: cursor
+mcp-wp
+stripe
