@@ -3,12 +3,15 @@ import { InvoiceOverdue } from '@/emails/InvoiceOverdue'
 import { InvoicePaid } from '@/emails/InvoicePaid'
 import { InvoicePaymentFailed } from '@/emails/InvoicePaymentFailed'
 import { InvoiceReady } from '@/emails/InvoiceReady'
+import { InvoiceReminder } from '@/emails/InvoiceReminder'
 import { InvoiceEmailProps } from '@/emails/components/InvoiceLayout'
 import { FirstPaymentMethodSaved } from '@/emails/FirstPaymentMethodSaved'
+import { CustomerPaymentMethodSaved } from '@/emails/CustomerPaymentMethodSaved'
 import {
   formatMoney,
   invoiceCustomerId,
-  listCustomerPaymentMethods,
+  listCustomerInvoices,
+  listCustomerSubscriptions,
   paymentMethodLabel,
   serializePaymentMethod,
 } from '@/app/utils/billing'
@@ -192,23 +195,47 @@ export async function sendFirstPaymentMethodEmail(method: Stripe.PaymentMethod) 
     return
   }
 
-  const methods = await listCustomerPaymentMethods(customerId)
-  if (methods.length !== 1) return
-
   const customer = await stripeBilling.customers.retrieve(customerId)
   if (customer.deleted) return
+
+  const [invoicesData, subsData] = await Promise.all([
+    listCustomerInvoices(customerId),
+    listCustomerSubscriptions(customerId),
+  ])
+
+  const unpaidInvoices = [...invoicesData.drafts, ...invoicesData.open]
+  const unpaidCount = unpaidInvoices.length
+  const unpaidTotal = unpaidInvoices.reduce(
+    (sum, inv) => sum + (inv.amountDue > 0 ? inv.amountDue : inv.subtotal),
+    0
+  )
+  const currency = unpaidInvoices[0]?.currency ?? 'usd'
+  const hasSubs = subsData.current.length > 0
+  const autopayStatus: 'enabled' | 'disabled' | 'none' = hasSubs
+    ? subsData.current.every((s) => s.autopay)
+      ? 'enabled'
+      : 'disabled'
+    : 'none'
+
+  const subjectPrefix = unpaidCount > 0 ? `[Action Needed] ` : ''
+  const subject = `${subjectPrefix}${customer.name || customer.email || customerId} saved a payment method`
 
   const { data, error } = await resend.emails.send(
     {
       from: billingFromAddress(),
       to: [notifyAddress()],
-      subject: `${customer.name || customer.email || customerId} saved a payment method`,
+      subject,
       ...(await renderEmail(
         <FirstPaymentMethodSaved
           customerName={customer.name ?? null}
           customerEmail={customer.email ?? null}
           methodLabel={paymentMethodLabel(serializePaymentMethod(method))}
           dashboardUrl={stripeCustomerDashboardUrl(customerId, method.livemode)}
+          unpaidInvoicesCount={unpaidCount}
+          unpaidInvoicesAmount={
+            unpaidCount > 0 ? formatMoney(unpaidTotal, currency) : null
+          }
+          autopayStatus={autopayStatus}
         />
       )),
       tags: [
@@ -216,7 +243,7 @@ export async function sendFirstPaymentMethodEmail(method: Stripe.PaymentMethod) 
         { name: 'event', value: 'first-payment-method' },
       ],
     },
-    { idempotencyKey: `billing-first-pm/${customerId}` }
+    { idempotencyKey: `billing-first-pm/${customerId}/${method.id}` }
   )
 
   if (error) {
@@ -225,4 +252,145 @@ export async function sendFirstPaymentMethodEmail(method: Stripe.PaymentMethod) 
   }
 
   console.log('billing first-method email sent', customerId, data?.id)
+}
+
+export async function sendCustomerPaymentMethodSavedEmail(
+  method: Stripe.PaymentMethod
+) {
+  const customerId =
+    typeof method.customer === 'string' ? method.customer : method.customer?.id
+  if (!customerId) return
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(
+      'customer payment-method email skipped: RESEND_API_KEY is not set'
+    )
+    return
+  }
+
+  const customer = await stripeBilling.customers.retrieve(customerId)
+  if (customer.deleted || !customer.email) return
+
+  const to = customer.email
+  const [invoicesData, subsData] = await Promise.all([
+    listCustomerInvoices(customerId),
+    listCustomerSubscriptions(customerId),
+  ])
+
+  const unpaidInvoices = [...invoicesData.drafts, ...invoicesData.open]
+  const unpaidCount = unpaidInvoices.length
+  const unpaidTotal = unpaidInvoices.reduce(
+    (sum, inv) => sum + (inv.amountDue > 0 ? inv.amountDue : inv.subtotal),
+    0
+  )
+  const currency = unpaidInvoices[0]?.currency ?? 'usd'
+  const hasActiveSubscription = subsData.current.length > 0
+  const autopayEnabled =
+    hasActiveSubscription && subsData.current.every((s) => s.autopay)
+
+  let actionUrl = invoicePayUrl('invoices', to)
+  const magicUrl = await createInvoiceMagicLink(to, 'account/billing', {
+    name: customer.name,
+  })
+  if (magicUrl) actionUrl = magicUrl
+
+  const methodLabel = paymentMethodLabel(serializePaymentMethod(method))
+  const subject =
+    unpaidCount > 0
+      ? `Your payment method was saved · Open invoice awaiting payment`
+      : `Your payment method was saved on Spenpo`
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: billingFromAddress(),
+      to: [to],
+      subject,
+      ...(await renderEmail(
+        <CustomerPaymentMethodSaved
+          customerName={customer.name ?? null}
+          methodLabel={methodLabel}
+          unpaidInvoicesCount={unpaidCount}
+          unpaidAmount={
+            unpaidCount > 0 ? formatMoney(unpaidTotal, currency) : null
+          }
+          actionUrl={actionUrl}
+          autopayEnabled={autopayEnabled}
+          hasActiveSubscription={hasActiveSubscription}
+        />
+      )),
+      tags: [
+        { name: 'customer_id', value: customerId },
+        { name: 'event', value: 'customer-payment-method-saved' },
+      ],
+    },
+    { idempotencyKey: `billing-cust-pm/${customerId}/${method.id}` }
+  )
+
+  if (error) {
+    console.log(
+      'billing customer payment method email failed',
+      customerId,
+      error.message
+    )
+    return
+  }
+
+  console.log('billing customer payment method email sent', customerId, data?.id)
+}
+
+export async function sendInvoiceReminderEmail(invoice: Stripe.Invoice) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log('invoice reminder email skipped: RESEND_API_KEY is not set')
+    return
+  }
+
+  const to = await resolveInvoiceRecipient(invoice)
+  if (!to) {
+    console.log('invoice reminder email skipped: no customer email', invoice.id)
+    return
+  }
+
+  const invoiceNumber = invoice.number || invoice.id
+  const amountCents = invoice.amount_due
+  const signInUrl = invoiceSignInUrl(invoice.id, to)
+  let invoiceUrl = invoicePayUrl(invoice.id, to)
+
+  const magicUrl = await createInvoiceMagicLink(to, invoice.id, {
+    name: invoice.customer_name,
+  })
+  if (magicUrl) invoiceUrl = magicUrl
+
+  const props: InvoiceEmailProps = {
+    customerName: invoice.customer_name,
+    invoiceNumber,
+    amount: formatMoney(amountCents, invoice.currency),
+    dueDate: formatInvoiceDate(invoice.due_date),
+    invoiceUrl,
+    billedEmail: to,
+    signInUrl,
+    linkExpiresDays: INVOICE_SIGN_IN_DAYS,
+  }
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: billingFromAddress(),
+      to: [to],
+      subject: `Friendly reminder: Invoice ${invoiceNumber} from Spenpo is awaiting payment`,
+      ...(await renderEmail(<InvoiceReminder {...props} />)),
+      tags: [
+        { name: 'invoice_id', value: invoice.id },
+        { name: 'event', value: 'reminder' },
+      ],
+    },
+    {
+      idempotencyKey: `invoice-reminder/${invoice.id}/${new Date().toISOString().slice(0, 10)}`,
+    }
+  )
+
+  if (error) {
+    console.log('billing invoice reminder email failed', invoice.id, error.message)
+    return
+  }
+
+  console.log('billing invoice reminder email sent', invoice.id, data?.id)
 }

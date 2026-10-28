@@ -814,3 +814,194 @@ export async function getInvoicePostPayState(
     currency,
   }
 }
+
+export type BillingAccountSummary = {
+  totalAmountDue: number
+  currency: string
+  openInvoices: SerializedInvoice[]
+  draftInvoices: SerializedInvoice[]
+  activeSubscriptions: SerializedSubscription[]
+  hasUnsettledBalance: boolean
+  hasDisabledAutopay: boolean
+  defaultPaymentMethod: SerializedPaymentMethod | null
+  methods: SerializedPaymentMethod[]
+}
+
+export async function getBillingAccountSummary(
+  customerIds: string | string[]
+): Promise<BillingAccountSummary> {
+  const ids = asCustomerIds(customerIds)
+  const primaryId = ids[0]
+
+  const [invoicesData, subsData, rawMethods, primaryCustomer] = await Promise.all([
+    listCustomerInvoices(ids),
+    listCustomerSubscriptions(ids),
+    primaryId ? listCustomerPaymentMethods(primaryId) : Promise.resolve([]),
+    primaryId
+      ? stripeBilling.customers
+          .retrieve(primaryId)
+          .catch(() => null as Stripe.Customer | Stripe.DeletedCustomer | null)
+      : Promise.resolve(null),
+  ])
+
+  const defaultMethodId =
+    primaryCustomer && !primaryCustomer.deleted
+      ? typeof primaryCustomer.invoice_settings?.default_payment_method === 'string'
+        ? primaryCustomer.invoice_settings.default_payment_method
+        : primaryCustomer.invoice_settings?.default_payment_method?.id ?? null
+      : null
+
+  const methods = rawMethods.map(serializePaymentMethod)
+  const defaultPaymentMethod =
+    methods.find((m) => m.id === defaultMethodId) || methods[0] || null
+
+  const payableInvoices = [...invoicesData.drafts, ...invoicesData.open]
+  const totalAmountDue = payableInvoices.reduce(
+    (sum, inv) => sum + (inv.amountDue > 0 ? inv.amountDue : inv.subtotal),
+    0
+  )
+  const currency = payableInvoices[0]?.currency ?? subsData.current[0]?.currency ?? 'usd'
+
+  const activeSubscriptions = subsData.current
+  const hasDisabledAutopay =
+    activeSubscriptions.length > 0 &&
+    activeSubscriptions.some((sub) => !sub.autopay)
+
+  return {
+    totalAmountDue,
+    currency,
+    openInvoices: invoicesData.open,
+    draftInvoices: invoicesData.drafts,
+    activeSubscriptions,
+    hasUnsettledBalance: totalAmountDue > 0,
+    hasDisabledAutopay,
+    defaultPaymentMethod,
+    methods,
+  }
+}
+
+export type SettleAccountResult = {
+  success: boolean
+  paidInvoiceIds: string[]
+  failedInvoiceIds: string[]
+  autopayEnabledSubscriptions: string[]
+  requiresActionInvoiceId?: string
+  clientSecret?: string
+  error?: string
+}
+
+export async function settleCustomerAccount(
+  customerId: string,
+  customerIds: string | string[],
+  options: {
+    paymentMethodId?: string
+    enableAutopay?: boolean
+  } = {}
+): Promise<SettleAccountResult> {
+  const ids = asCustomerIds(customerIds)
+  const allowed = new Set(ids)
+
+  let paymentMethodId = options.paymentMethodId
+  if (paymentMethodId) {
+    const method = await ownedPaymentMethod(customerId, paymentMethodId)
+    if (!method) {
+      return {
+        success: false,
+        paidInvoiceIds: [],
+        failedInvoiceIds: [],
+        autopayEnabledSubscriptions: [],
+        error: 'Payment method not found',
+      }
+    }
+    // Set as default payment method
+    await setCustomerDefaultPaymentMethod(customerId, method)
+  } else {
+    const customer = await stripeBilling.customers.retrieve(customerId)
+    if (!customer.deleted) {
+      const def = customer.invoice_settings?.default_payment_method
+      paymentMethodId = typeof def === 'string' ? def : def?.id ?? undefined
+    }
+  }
+
+  // 1. Gather all open and draft invoices
+  const { drafts, open } = await listCustomerInvoices(ids)
+  const payable = [...drafts, ...open].filter(
+    (inv) => inv.status === 'draft' || inv.status === 'open'
+  )
+
+  const paidInvoiceIds: string[] = []
+  const failedInvoiceIds: string[] = []
+  let requiresActionInvoiceId: string | undefined
+  let clientSecret: string | undefined
+
+  for (const inv of payable) {
+    try {
+      let stripeInv = await stripeBilling.invoices.retrieve(inv.id, {
+        expand: ['confirmation_secret', ...INVOICE_PAYMENT_INTENT_EXPAND],
+      })
+      const ownerId = invoiceCustomerId(stripeInv)
+      if (!ownerId || !allowed.has(ownerId)) continue
+
+      if (stripeInv.status === 'draft') {
+        stripeInv = await stripeBilling.invoices.finalizeInvoice(stripeInv.id, {
+          auto_advance: false,
+          expand: ['confirmation_secret', ...INVOICE_PAYMENT_INTENT_EXPAND],
+        })
+      }
+
+      if (stripeInv.status === 'open' && stripeInv.amount_due > 0) {
+        const payParams: Stripe.InvoicePayParams = {
+          off_session: true,
+        }
+        if (paymentMethodId) {
+          payParams.payment_method = paymentMethodId
+        }
+
+        const paid = await stripeBilling.invoices.pay(stripeInv.id, payParams)
+        if (paid.status === 'paid') {
+          paidInvoiceIds.push(paid.id)
+        } else {
+          failedInvoiceIds.push(stripeInv.id)
+        }
+      }
+    } catch (err: unknown) {
+      if (err instanceof Stripe.errors.StripeCardError) {
+        if (err.payment_intent?.status === 'requires_action') {
+          requiresActionInvoiceId = inv.id
+          clientSecret = err.payment_intent.client_secret ?? undefined
+        }
+      }
+      failedInvoiceIds.push(inv.id)
+    }
+  }
+
+  // 2. Enable autopay on active subscriptions if requested
+  const autopayEnabledSubscriptions: string[] = []
+  if (options.enableAutopay) {
+    const subsData = await listCustomerSubscriptions(ids)
+    for (const sub of subsData.current) {
+      if (!sub.autopay || sub.collectionMethod !== 'charge_automatically') {
+        try {
+          await stripeBilling.subscriptions.update(sub.id, {
+            collection_method: 'charge_automatically',
+            ...(paymentMethodId ? { default_payment_method: paymentMethodId } : {}),
+            proration_behavior: 'none',
+          })
+          autopayEnabledSubscriptions.push(sub.id)
+        } catch (err) {
+          console.error('Failed to enable autopay on subscription', sub.id, err)
+        }
+      }
+    }
+  }
+
+  return {
+    success: failedInvoiceIds.length === 0,
+    paidInvoiceIds,
+    failedInvoiceIds,
+    autopayEnabledSubscriptions,
+    requiresActionInvoiceId,
+    clientSecret,
+  }
+}
+

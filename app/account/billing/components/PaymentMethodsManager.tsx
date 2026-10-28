@@ -3,7 +3,9 @@ import React, { FormEvent, useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
+  Button,
   Chip,
+  Paper,
   Stack,
   Table,
   TableBody,
@@ -12,6 +14,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
 import {
   Elements,
@@ -20,7 +23,12 @@ import {
   useStripe,
 } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
-import { paymentMethodLabel, SerializedPaymentMethod } from '@/app/utils/billing'
+import {
+  BillingAccountSummary,
+  formatMoney,
+  paymentMethodLabel,
+  SerializedPaymentMethod,
+} from '@/app/utils/billing'
 import { BillingListSkeleton } from './BillingListSkeleton'
 
 const stripePromise = loadStripe(
@@ -93,6 +101,12 @@ export function PaymentMethodsManager({
   >(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [bankPromptId, setBankPromptId] = useState<string | null>(null)
+  const [postSaveBridge, setPostSaveBridge] = useState<{
+    savedMethodId: string
+    summary: BillingAccountSummary
+  } | null>(null)
+  const [settleSuccess, setSettleSuccess] = useState<string | null>(null)
+  const [isSettling, setIsSettling] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [pending, setPending] = useState<
@@ -130,6 +144,23 @@ export function PaymentMethodsManager({
         setBankPromptId(saved.id)
       } else {
         setBankPromptId(null)
+      }
+
+      if (savedMethodId) {
+        try {
+          const summaryRes = await fetch('/api/billing/summary')
+          if (summaryRes.ok) {
+            const summary: BillingAccountSummary = await summaryRes.json()
+            if (summary.hasUnsettledBalance || summary.hasDisabledAutopay) {
+              setPostSaveBridge({
+                savedMethodId,
+                summary,
+              })
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching billing summary after save', err)
+        }
       }
     },
     []
@@ -232,6 +263,38 @@ export function PaymentMethodsManager({
     setPending(null)
   }
 
+  const handleSettle = async (methodId: string) => {
+    setIsSettling(true)
+    setMessage(null)
+    try {
+      const response = await fetch('/api/billing/settle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethodId: methodId,
+          enableAutopay: true,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        setMessage(
+          data.error ??
+            'Unable to process payment for open invoices. Please check your Invoices tab.'
+        )
+      } else {
+        setPostSaveBridge(null)
+        setSettleSuccess(
+          'Payment received and autopay is now active! Your account is completely settled.'
+        )
+        await loadMethods()
+      }
+    } catch {
+      setMessage('An error occurred while settling your account.')
+    } finally {
+      setIsSettling(false)
+    }
+  }
+
   if (loading) {
     return <BillingListSkeleton />
   }
@@ -241,6 +304,92 @@ export function PaymentMethodsManager({
 
   return (
     <Stack gap={3}>
+      {settleSuccess && (
+        <Alert severity="success" onClose={() => setSettleSuccess(null)}>
+          {settleSuccess}
+        </Alert>
+      )}
+
+      {postSaveBridge && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            borderRadius: 2,
+            border: 2,
+            borderColor: 'primary.main',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark' ? 'background.paper' : 'action.hover',
+          }}
+        >
+          <Stack gap={1.5}>
+            <Stack direction="row" alignItems="center" gap={1}>
+              <CheckCircleOutlineIcon color="success" />
+              <Typography variant="subtitle1" fontWeight={600}>
+                {paymentMethodLabel(
+                  methods.find((m) => m.id === postSaveBridge.savedMethodId) ||
+                    methods[0]
+                )}{' '}
+                saved!
+              </Typography>
+            </Stack>
+
+            {postSaveBridge.summary.hasUnsettledBalance && (
+              <Typography>
+                You have{' '}
+                <strong>
+                  {postSaveBridge.summary.openInvoices.length +
+                    postSaveBridge.summary.draftInvoices.length}{' '}
+                  unpaid invoice(s)
+                </strong>{' '}
+                totaling{' '}
+                <strong>
+                  {formatMoney(
+                    postSaveBridge.summary.totalAmountDue,
+                    postSaveBridge.summary.currency
+                  )}
+                </strong>
+                .
+              </Typography>
+            )}
+
+            {postSaveBridge.summary.hasDisabledAutopay && (
+              <Typography variant="body2" color="text.secondary">
+                Autopay is currently turned off for your ongoing service.
+              </Typography>
+            )}
+
+            <Stack
+              direction="row"
+              gap={2}
+              alignItems="center"
+              flexWrap="wrap"
+              sx={{ mt: 0.5 }}
+            >
+              <LoadingButton
+                variant="contained"
+                loading={isSettling}
+                onClick={() => handleSettle(postSaveBridge.savedMethodId)}
+              >
+                {postSaveBridge.summary.hasUnsettledBalance
+                  ? `Pay ${formatMoney(
+                      postSaveBridge.summary.totalAmountDue,
+                      postSaveBridge.summary.currency
+                    )} & Turn On Autopay`
+                  : 'Turn On Autopay'}
+              </LoadingButton>
+              <Button
+                variant="text"
+                disabled={isSettling}
+                onClick={() => setPostSaveBridge(null)}
+              >
+                I&apos;ll do this later
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
+
       {methods.length === 0 ? (
         <Typography color="text.secondary">
           Save a bank account or card to pay invoices and turn on autopay. Bank

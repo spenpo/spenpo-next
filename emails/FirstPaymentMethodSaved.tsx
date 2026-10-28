@@ -16,6 +16,9 @@ export type FirstPaymentMethodSavedProps = {
   customerEmail: string | null
   methodLabel: string
   dashboardUrl: string
+  unpaidInvoicesCount?: number
+  unpaidInvoicesAmount?: string | null
+  autopayStatus?: 'enabled' | 'disabled' | 'none'
 }
 
 const body: CSSProperties = {
@@ -41,6 +44,17 @@ const paragraph: CSSProperties = {
   margin: '0 0 16px',
 }
 
+const alertBox: CSSProperties = {
+  backgroundColor: '#fef3c7',
+  border: '1px solid #f59e0b',
+  borderRadius: '6px',
+  color: '#92400e',
+  padding: '12px 16px',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '0 0 16px',
+}
+
 const button: CSSProperties = {
   backgroundColor: '#111827',
   borderRadius: '6px',
@@ -60,27 +74,56 @@ export function FirstPaymentMethodSaved({
   customerEmail,
   methodLabel,
   dashboardUrl,
+  unpaidInvoicesCount = 0,
+  unpaidInvoicesAmount,
+  autopayStatus = 'none',
 }: FirstPaymentMethodSavedProps) {
   const who = customerName || customerEmail || 'A customer'
+  const hasUnpaid = unpaidInvoicesCount > 0
+  const isAutopayOff = autopayStatus === 'disabled'
 
   return (
     <Html lang="en">
       <Head />
       <Body style={body}>
-        <Preview>{who} saved a payment method</Preview>
+        <Preview>
+          {who} saved a payment method
+          {hasUnpaid ? ` · ${unpaidInvoicesAmount} unpaid` : ''}
+        </Preview>
         <Container style={container}>
           <Heading
             as="h1"
             style={{ color: '#18181b', fontSize: '24px', margin: '0 0 16px' }}
           >
-            First payment method saved
+            Payment method saved
           </Heading>
           <Text style={paragraph}>
             {who}
             {customerEmail && customerName ? ` (${customerEmail})` : ''} saved{' '}
-            {methodLabel}. You can create their subscription in the Stripe
-            Dashboard now — the customer discount will follow their default method.
+            {methodLabel}.
           </Text>
+
+          {hasUnpaid && (
+            <div style={alertBox}>
+              <strong>⚠️ Open Balance:</strong> Customer has{' '}
+              {unpaidInvoicesCount} unpaid invoice(s) totaling{' '}
+              {unpaidInvoicesAmount}. Note that saving a payment method does not
+              automatically charge existing invoices.
+            </div>
+          )}
+
+          {isAutopayOff && (
+            <div style={alertBox}>
+              <strong>⚠️ Autopay Disabled:</strong> This customer has an active
+              subscription, but autopay is currently OFF (set to send invoices).
+            </div>
+          )}
+
+          <Text style={paragraph}>
+            You can view this customer, charge open invoices, or toggle automatic
+            collection in the Stripe Dashboard.
+          </Text>
+
           <Button href={dashboardUrl} style={button}>
             Open customer in Stripe
           </Button>
@@ -105,6 +148,9 @@ FirstPaymentMethodSaved.PreviewProps = {
   customerEmail: 'alex@example.com',
   methodLabel: 'Bank •••• 6789',
   dashboardUrl: 'https://dashboard.stripe.com/test/customers/cus_test',
+  unpaidInvoicesCount: 1,
+  unpaidInvoicesAmount: '$150.00',
+  autopayStatus: 'disabled',
 } satisfies FirstPaymentMethodSavedProps
 
 export default FirstPaymentMethodSaved

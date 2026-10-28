@@ -1,9 +1,13 @@
 import { Typography } from '@mui/material'
 import prisma from '@/app/utils/prisma'
 import { getBillingCustomers } from '@/app/utils/stripeCustomer'
-import { listCustomerInvoices } from '@/app/utils/billing'
+import {
+  getBillingAccountSummary,
+  listCustomerInvoices,
+} from '@/app/utils/billing'
 import { requireBillingPage } from '@/app/utils/billingSession'
 import { InvoiceList } from './components/InvoiceList'
+import { AccountOverviewHero } from './components/AccountOverviewHero'
 import { BillingMismatchCard } from './components/BillingMismatchCard'
 import { PageProps } from '@/app/types/app'
 
@@ -27,15 +31,21 @@ export default async function BillingPage({ searchParams }: PageProps) {
   }
 
   const { customerIds } = await getBillingCustomers(user)
-  const { drafts, open, history } = await listCustomerInvoices(customerIds)
+  const [summary, { drafts, open, history }] = await Promise.all([
+    getBillingAccountSummary(customerIds),
+    listCustomerInvoices(customerIds),
+  ])
 
   return (
-    <InvoiceList
-      drafts={drafts}
-      open={open}
-      history={history}
-      sessionEmail={user.email}
-      billedEmail={billedEmail}
-    />
+    <>
+      <AccountOverviewHero summary={summary} />
+      <InvoiceList
+        drafts={drafts}
+        open={open}
+        history={history}
+        sessionEmail={user.email}
+        billedEmail={billedEmail}
+      />
+    </>
   )
 }

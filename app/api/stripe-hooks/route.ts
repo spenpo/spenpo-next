@@ -26,6 +26,7 @@ import { JsonObject } from '@prisma/client/runtime/library'
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import {
+  sendCustomerPaymentMethodSavedEmail,
   sendFirstPaymentMethodEmail,
   sendInvoiceEventEmail,
 } from '@/app/utils/billingEmails'
@@ -109,10 +110,13 @@ export async function POST(req: NextRequest) {
       const method = event.data.object as Stripe.PaymentMethod
       console.log(event.type, method.id)
       try {
-        await sendFirstPaymentMethodEmail(method)
+        await Promise.all([
+          sendFirstPaymentMethodEmail(method),
+          sendCustomerPaymentMethodSavedEmail(method),
+        ])
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
-        console.log('billing first-method email error', message)
+        console.log('billing payment method email error', message)
       }
       break
     }
