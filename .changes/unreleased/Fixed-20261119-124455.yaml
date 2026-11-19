@@ -1,0 +1,3 @@
+kind: Fixed
+body: Serve /privacy-policy from the WordPress privacy page instead of 404ing; redirect /privacy there
+time: 2026-11-19T12:44:55.836368+08:00
