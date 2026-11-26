@@ -3,6 +3,8 @@ import React from 'react'
 import prisma from '@/app/utils/prisma'
 import { Product } from './components/Product'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Products() {
   const products = await prisma.product.findMany({ where: { hide: false } })
 

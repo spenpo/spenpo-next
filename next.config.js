@@ -10,6 +10,12 @@ module.exports = {
       'prisma',
       '@react-email/render',
     ],
+    outputFileTracingIncludes: {
+      '/*': [
+        './node_modules/.prisma/client/**',
+        './node_modules/@prisma/client/**',
+      ],
+    },
   },
   webpack: (config) => {
     config.experiments = { ...config.experiments, topLevelAwait: true }
