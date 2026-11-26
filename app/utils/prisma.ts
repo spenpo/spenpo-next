@@ -17,7 +17,7 @@ function getClient(): PrismaClient {
 }
 
 const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop, _receiver) {
+  get(_target, prop) {
     // Avoid looking like a thenable during module evaluation.
     if (prop === 'then') return undefined
     const client = getClient()
