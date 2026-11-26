@@ -1,18 +1,15 @@
-import { PrismaClient } from '@prisma/client/edge'
-import { withAccelerate } from '@prisma/extension-accelerate'
+import { PrismaClient } from '@prisma/client'
 
-// Learn more about instantiating PrismaClient in Next.js here: https://www.prisma.io/docs/data-platform/accelerate/getting-started
+// Instantiate once per Node process so Next.js hot reloads and Vercel
+// serverless warm invocations reuse the same client instead of opening a
+// new MySQL pool each time. Hostinger shared MySQL has a low connection
+// limit; pair this singleton with connection_limit=1 on DATABASE_URL.
+// https://www.prisma.io/docs/orm/more-or-less/help-and-troubleshooting/nextjs-prisma-client-dev-practices
 
-const prismaClientSingleton = () => {
-  return new PrismaClient().$extends(withAccelerate())
-}
+const prismaClientSingleton = () => new PrismaClient()
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>
-} & typeof global
-
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+const prisma = globalThis.prisma ?? prismaClientSingleton()
 
 export default prisma
 
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+globalThis.prisma = prisma

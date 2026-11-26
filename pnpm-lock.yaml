@@ -47,9 +47,6 @@ importers:
       '@prisma/client':
         specifier: ^5.20.0
         version: 5.20.0(prisma@5.20.0)
-      '@prisma/extension-accelerate':
-        specifier: ^1.2.0
-        version: 1.2.0(@prisma/client@5.20.0(prisma@5.20.0))
       '@react-email/render':
         specifier: ^2.1.0
         version: 2.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1591,12 +1588,6 @@ packages:
 
   '@prisma/engines@5.20.0':
     resolution: {integrity: sha512-DtqkP+hcZvPEbj8t8dK5df2b7d3B8GNauKqaddRRqQBBlgkbdhJkxhoJTrOowlS3vaRt2iMCkU0+CSNn0KhqAQ==}
-
-  '@prisma/extension-accelerate@1.2.0':
-    resolution: {integrity: sha512-bELNCWi1iZx4Q1iFFEDcUEc+KR9M8I2lhO2fO9DabKOQjLQc/WkPXbaNB1dr81WZPqzj7FwFVAqpex3NNkxSPw==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      '@prisma/client': '>=4.16.1'
 
   '@prisma/fetch-engine@5.20.0':
     resolution: {integrity: sha512-JVcaPXC940wOGpCOwuqQRTz6I9SaBK0c1BAyC1pcz9xBi+dzFgUu3G/p9GV1FhFs9OKpfSpIhQfUJE9y00zhqw==}
@@ -5854,10 +5845,6 @@ snapshots:
       '@prisma/engines-version': 5.20.0-12.06fc58a368dc7be9fbbbe894adf8d445d208c284
       '@prisma/fetch-engine': 5.20.0
       '@prisma/get-platform': 5.20.0
-
-  '@prisma/extension-accelerate@1.2.0(@prisma/client@5.20.0(prisma@5.20.0))':
-    dependencies:
-      '@prisma/client': 5.20.0(prisma@5.20.0)
 
   '@prisma/fetch-engine@5.20.0':
     dependencies:

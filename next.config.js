@@ -5,7 +5,11 @@ module.exports = {
   ...nextConfig,
   transpilePackages: ['react-email'],
   experimental: {
-    serverComponentsExternalPackages: ['@react-email/render'],
+    serverComponentsExternalPackages: [
+      '@prisma/client',
+      'prisma',
+      '@react-email/render',
+    ],
   },
   webpack: (config) => {
     config.experiments = { ...config.experiments, topLevelAwait: true }
