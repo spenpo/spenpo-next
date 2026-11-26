@@ -5,15 +5,12 @@ module.exports = {
   ...nextConfig,
   transpilePackages: ['react-email'],
   experimental: {
-    serverComponentsExternalPackages: [
-      '@prisma/client',
-      'prisma',
-      '@react-email/render',
-    ],
+    serverComponentsExternalPackages: ['@prisma/client', '@react-email/render'],
     outputFileTracingIncludes: {
-      '/*': [
-        './node_modules/.prisma/client/**',
-        './node_modules/@prisma/client/**',
+      // pnpm nests the generated query engine next to @prisma/client
+      '*': [
+        'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**',
+        'node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/**',
       ],
     },
   },
