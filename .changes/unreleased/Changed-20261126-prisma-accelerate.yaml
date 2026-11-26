@@ -1,0 +1,3 @@
+kind: Changed
+body: Connect Prisma directly to Hostinger MySQL instead of Prisma Accelerate (retiring 2026-12-01)
+time: 2026-11-26T02:40:00Z

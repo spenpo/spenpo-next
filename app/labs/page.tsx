@@ -3,6 +3,8 @@ import React from 'react'
 import prisma from '@/app/utils/prisma'
 import { Product } from '@/app/products/components/Product'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Products() {
   const products = await prisma.product.findMany({ where: { hide: false } }).then((products) => products.sort((a) => a.name === "Forged SEO" ? -1 : 1))
 

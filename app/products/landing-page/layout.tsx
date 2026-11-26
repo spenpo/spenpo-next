@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import prisma from '@/app/utils/prisma'
 import { ShoppingCartContextProvider } from '@/app/context/shoppingCart'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
   const product = await prisma.product.findFirst({
     where: {

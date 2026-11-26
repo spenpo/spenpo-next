@@ -5,7 +5,14 @@ module.exports = {
   ...nextConfig,
   transpilePackages: ['react-email'],
   experimental: {
-    serverComponentsExternalPackages: ['@react-email/render'],
+    serverComponentsExternalPackages: ['@prisma/client', '@react-email/render'],
+    outputFileTracingIncludes: {
+      // pnpm nests the generated query engine next to @prisma/client
+      '*': [
+        'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**',
+        'node_modules/.pnpm/@prisma+client@*/node_modules/@prisma/client/**',
+      ],
+    },
   },
   webpack: (config) => {
     config.experiments = { ...config.experiments, topLevelAwait: true }

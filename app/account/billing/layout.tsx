@@ -3,6 +3,8 @@ import { Paper, Stack, Typography } from '@mui/material'
 import { BillingNav } from './components/BillingNav'
 import { WrongAccountBanner } from './components/WrongAccountBanner'
 
+export const dynamic = 'force-dynamic'
+
 export default function BillingLayout({
   children,
 }: {
